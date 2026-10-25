@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>LagKill — Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0a0e17; --card: #101622; --card-2: #121a28; --border: #1c2536; --border-2: #26324a;
+        --text: #e9eef8; --text-2: #9aa6bd; --text-3: #66728b; --accent: #22c3ee;
+        --grad: linear-gradient(135deg, #22c3ee, #3b82f6 55%, #8b5cf6);
+        /* paleta kategorii — sprawdzona walidatorem (ciemne tło #101622) */
+        --c-premium: #b8800b; --c-follow: #1b9fd0; --c-owner: #8b5cf6; --c-locked: #d9548a;
+        --series: #1b9fd0;
+        --grid: #1a2232;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; }
+      body {
+        font-family: "Sora", "Segoe UI", sans-serif; color: var(--text); font-size: 14px; min-height: 100vh;
+        background: radial-gradient(1100px 600px at 100% -10%, rgba(139, 92, 246, .10), transparent 60%),
+          radial-gradient(900px 500px at 0% 0%, rgba(34, 195, 238, .07), transparent 60%), var(--bg);
+      }
+      button { font-family: inherit; cursor: pointer; }
+      .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; }
+      .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+      .brand img { width: 34px; height: 34px; border-radius: 10px; }
+      .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      .muted { color: var(--text-2); }
+      .dim { color: var(--text-3); }
+      .btn { height: 36px; padding: 0 14px; border-radius: 9px; border: 1px solid var(--border-2); background: #0f1625; color: var(--text); font-weight: 600; font-size: 13px; }
+      .btn:hover { border-color: #3a4a6a; }
+      .btn.primary { background: var(--grad); border: none; color: #fff; }
+
+      /* logowanie */
+      .login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+      .login-box { width: min(380px, 100%); background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 30px; text-align: center; }
+      .login-box h1 { font-size: 22px; margin: 18px 0 6px; }
+      .login-box input { width: 100%; height: 44px; margin: 18px 0 12px; border-radius: 10px; border: 1px solid var(--border-2); background: #0d1320; color: var(--text); padding: 0 14px; font-family: inherit; font-size: 14px; outline: none; }
+      .login-box input:focus { border-color: var(--accent); }
+      .login-box .btn { width: 100%; height: 44px; }
+      .err { color: #fca5a5; font-size: 13px; min-height: 18px; margin-top: 10px; }
+      .link { background: none; border: none; color: var(--text-3); font-size: 12.5px; margin-top: 14px; text-decoration: underline; }
+
+      /* panel */
+      header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+      header.top h1 { font-size: 26px; margin: 14px 0 2px; letter-spacing: -.4px; }
+      .actions { display: flex; gap: 8px; align-items: center; }
+      .demo-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #fcd34d; background: rgba(184, 128, 11, .18); padding: 4px 8px; border-radius: 6px; }
+      .grid { display: grid; gap: 14px; }
+      .kpis { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+      .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; min-width: 0; }
+      .kpi .label { font-size: 12px; color: var(--text-3); font-weight: 600; letter-spacing: .3px; }
+      .kpi .val { font-size: 30px; font-weight: 700; margin-top: 6px; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+      .kpi .sub { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+      .kpi.hero { background: linear-gradient(135deg, rgba(34, 195, 238, .10), rgba(139, 92, 246, .08) 70%, var(--card)); border-color: var(--border-2); }
+      .active3 { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+      .active3 div b { display: block; font-size: 19px; font-variant-numeric: tabular-nums; }
+      .active3 div span { font-size: 11.5px; color: var(--text-3); }
+      h2 { font-size: 14px; margin: 0 0 4px; font-weight: 600; }
+      .card .hint { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
+      .two { grid-template-columns: 2fr 1fr; margin-top: 14px; }
+      .three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 14px; }
+      @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+
+      /* wykresy */
+      .chart { position: relative; }
+      .chart svg { display: block; width: 100%; overflow: visible; }
+      .axis text { fill: var(--text-3); font-size: 11px; font-family: Sora, sans-serif; }
+      .tip {
+        position: absolute; pointer-events: none; background: #0b1019; border: 1px solid var(--border-2); border-radius: 9px;
+        padding: 8px 10px; font-size: 12px; white-space: nowrap; transform: translate(-50%, -110%); opacity: 0; transition: opacity .1s;
+      }
+      .tip b { font-size: 14px; display: block; }
+
+      /* listy z paskami */
+      .bars { display: flex; flex-direction: column; gap: 9px; }
+      .bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 10px; align-items: center; font-size: 12.5px; }
+      .bar-row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+      .bar-track { height: 6px; background: #151d2c; border-radius: 4px; overflow: hidden; }
+      .bar-fill { height: 100%; background: var(--series); border-radius: 4px; }
+      .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
+      .empty { color: var(--text-3); font-size: 12.5px; padding: 8px 0; }
+
+      /* podział planów */
+      .stack { display: flex; height: 26px; border-radius: 6px; overflow: hidden; gap: 2px; margin: 6px 0 14px; background: var(--card); }
+      .stack div { height: 100%; min-width: 2px; }
+      .legend { display: grid; grid-template-columns: 1fr; gap: 9px; }
+      .legend div { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+      .legend i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+      .legend b { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .legend b small { color: var(--text-3); font-weight: 500; margin-left: 6px; }
+      .counters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .counters div { background: #0e1420; border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+      .counters b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+      .counters span { font-size: 11.5px; color: var(--text-3); }
+      .hidden { display: none !important; }
+
+      /* użytkownicy i aktywność */
+      .users-grid { grid-template-columns: minmax(0, 1fr) 340px; margin-top: 14px; }
+      @media (max-width: 1100px) { .users-grid { grid-template-columns: 1fr; } }
+      .scroll::-webkit-scrollbar, .feed::-webkit-scrollbar { width: 8px; height: 8px; }
+      .scroll::-webkit-scrollbar-thumb, .feed::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+      .scroll::-webkit-scrollbar-track, .feed::-webkit-scrollbar-track, .scroll::-webkit-scrollbar-corner { background: transparent; }
+      .users-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .search { height: 34px; width: min(260px, 100%); border-radius: 9px; border: 1px solid var(--border-2); background: #0d1320; color: var(--text); padding: 0 12px; font-family: inherit; font-size: 13px; outline: none; }
+      .search:focus { border-color: var(--accent); }
+      .table-wrap { overflow-x: auto; margin: 0 -18px -18px; }
+      table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+      th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .3px; color: var(--text-3); padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; background: var(--card); }
+      td { padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+      tr:last-child td { border-bottom: none; }
+      tbody tr:hover { background: #ffffff05; }
+      th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+      th:first-child, td:first-child { padding-left: 18px; }
+      .scroll { max-height: 520px; overflow-y: auto; }
+      .who b { display: block; font-size: 13px; }
+      .who span { color: var(--text-3); font-size: 11.5px; }
+      .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
+      .pill.premium { color: #fcd34d; background: rgba(184, 128, 11, .2); }
+      .pill.owner { color: #c4b5fd; background: rgba(139, 92, 246, .2); }
+      .pill.follow { color: #67e8f9; background: rgba(27, 159, 208, .18); }
+      .pill.locked { color: #f9a8c9; background: rgba(217, 84, 138, .16); }
+      .pill.none { color: var(--text-3); background: #151d2c; }
+      .online { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-right: 6px; vertical-align: middle; }
+      .feed { display: flex; flex-direction: column; max-height: 520px; overflow-y: auto; margin: 0 -18px -18px; }
+      .feed-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 9px 18px; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+      .feed-row:last-child { border-bottom: none; }
+      .feed-row b { font-weight: 600; }
+      .feed-row .what { color: var(--text-2); grid-column: 1; line-height: 1.45; min-width: 0; overflow-wrap: anywhere; }
+      .feed-row time { color: var(--text-3); font-size: 11.5px; grid-row: 1; grid-column: 2; }
+    </style>
+  </head>
+  <body>
+    <!-- Logowanie -->
+    <div id="login" class="login">
+      <div class="login-box">
+        <div class="brand" style="justify-content: center"><img src="logo.png" alt="" /> <span>Lag<span class="grad">Kill</span></span></div>
+        <h1>Panel statystyk</h1>
+        <div class="muted" style="font-size: 13px">Wpisz hasło ustawione w Supabase.</div>
+        <form id="login-form">
+          <input id="pass" type="password" placeholder="Hasło do panelu" autocomplete="current-password" />
+          <button class="btn primary" type="submit">Zaloguj</button>
+        </form>
+        <div class="err" id="err"></div>
+        <button class="link" id="demo">Pokaż przykładowe dane</button>
+      </div>
+    </div>
+
+    <!-- Panel -->
+    <div id="app" class="wrap hidden">
+      <header class="top">
+        <div>
+          <div class="brand"><img src="logo.png" alt="" /> <span>Lag<span class="grad">Kill</span></span> <span id="demo-badge" class="demo-badge hidden">PRZYKŁADOWE DANE</span></div>
+          <h1>Statystyki</h1>
+          <div class="dim" id="updated" style="font-size: 12.5px"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="refresh">Odśwież</button>
+          <button class="btn" id="logout">Wyloguj</button>
+        </div>
+      </header>
+
+      <div class="grid kpis" id="kpis"></div>
+
+      <div class="grid users-grid">
+        <div class="card">
+          <div class="users-head">
+            <div>
+              <h2>Użytkownicy</h2>
+              <div class="hint" id="users-hint">Każda instalacja z kontem Discord · ostatnio aktywni na górze</div>
+            </div>
+            <input id="user-search" class="search" type="search" placeholder="Szukaj nicku lub ID…" />
+          </div>
+          <div class="table-wrap scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Użytkownik</th><th>Plan</th><th class="num">Uruchomienia</th><th class="num">Tweaki</th><th class="num">Gry</th>
+                  <th>Ostatnio</th><th>Pierwszy raz</th><th>System</th>
+                </tr>
+              </thead>
+              <tbody id="users"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Ostatnia aktywność</h2>
+          <div class="hint">Na żywo · ostatnie 80 zdarzeń</div>
+          <div class="feed" id="recent"></div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>Aktywni użytkownicy dziennie</h2>
+          <div class="hint">Unikalne instalacje, które uruchomiły LagKill danego dnia · 30 dni</div>
+          <div class="chart" id="chart-active"></div>
+        </div>
+        <div class="card">
+          <h2>Plany użytkowników</h2>
+          <div class="hint">Stan aktywnych użytkowników z 30 dni</div>
+          <div id="plans"></div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h2>Instalacje dziennie</h2>
+          <div class="hint">Udane instalacje z LagKill Setup · 30 dni</div>
+          <div class="chart" id="chart-installs"></div>
+        </div>
+        <div class="card">
+          <h2>Aktywność</h2>
+          <div class="hint">Łącznie od początku</div>
+          <div class="counters" id="counters"></div>
+        </div>
+      </div>
+
+      <div class="grid three">
+        <div class="card"><h2>Najczęściej włączane tweaki</h2><div class="hint">30 dni</div><div class="bars" id="top-tweaks"></div></div>
+        <div class="card"><h2>Instalowane aplikacje</h2><div class="hint">30 dni</div><div class="bars" id="top-apps"></div></div>
+        <div class="card">
+          <h2>Wersje i system</h2><div class="hint">Aktywni użytkownicy · 30 dni</div>
+          <div class="bars" id="versions"></div>
+          <div style="height: 14px"></div>
+          <div class="bars" id="windows"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="tweaks.js"></script>
+    <script src="panel.js"></script>
+  </body>
+</html>
