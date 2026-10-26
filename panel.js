@@ -87,7 +87,7 @@ function render(s) {
 
 /* ───────── użytkownicy i aktywność ───────── */
 
-const PLAN = { premium: "★ Premium", owner: "👑 Owner", follow: "Za obserwację", locked: "Zablokowany" };
+const PLAN = { premium: "Premium", owner: "Owner", follow: "Follower", locked: "Free" };
 const EVENT = {
   first_run: () => "pierwsze uruchomienie",
   app_open: () => "uruchomił LagKill",
@@ -171,9 +171,9 @@ function bars(el, items) {
 function plans(p) {
   const parts = [
     { k: "Premium", v: p.premium, c: "var(--c-premium)" },
-    { k: "Za obserwację", v: p.follow, c: "var(--c-follow)" },
+    { k: "Follower", v: p.follow, c: "var(--c-follow)" },
     { k: "Owner", v: p.owner, c: "var(--c-owner)" },
-    { k: "Zablokowani", v: p.locked, c: "var(--c-locked)" },
+    { k: "Free", v: p.locked, c: "var(--c-locked)" },
   ];
   const total = parts.reduce((s, x) => s + x.v, 0);
   $("plans").innerHTML = `
@@ -233,7 +233,7 @@ function lineChart(el, data, unit) {
   const pts = data.map((d, i) => `${c.x(i)},${c.y(d.y)}`).join(" ");
   const base = c.y(0);
   c.svg.querySelector(".plot").innerHTML = `
-    <defs><linearGradient id="fill-${el.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b9fd0" stop-opacity=".28"/><stop offset="1" stop-color="#1b9fd0" stop-opacity="0"/></linearGradient></defs>
+    <defs><linearGradient id="fill-${el.id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e7bff" stop-opacity=".28"/><stop offset="1" stop-color="#1e7bff" stop-opacity="0"/></linearGradient></defs>
     <polygon points="${c.x(0)},${base} ${pts} ${c.x(data.length - 1)},${base}" fill="url(#fill-${el.id})"/>
     <polyline points="${pts}" fill="none" stroke="var(--series)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
   const hov = c.svg.querySelector(".hover");

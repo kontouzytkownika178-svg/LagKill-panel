@@ -9,20 +9,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #0a0e17; --card: #101622; --card-2: #121a28; --border: #1c2536; --border-2: #26324a;
-        --text: #e9eef8; --text-2: #9aa6bd; --text-3: #66728b; --accent: #22c3ee;
-        --grad: linear-gradient(135deg, #22c3ee, #3b82f6 55%, #8b5cf6);
-        /* paleta kategorii — sprawdzona walidatorem (ciemne tło #101622) */
-        --c-premium: #b8800b; --c-follow: #1b9fd0; --c-owner: #8b5cf6; --c-locked: #d9548a;
-        --series: #1b9fd0;
+        --bg: #05070c; --card: #0b0f18; --card-2: #0d121c; --border: #181e2b; --border-2: #232b3b;
+        --text: #f2f4f8; --text-2: #8a93a6; --text-3: #5d6578; --accent: #1e7bff;
+        --grad: linear-gradient(var(--accent), var(--accent));
+        /* rangi: Premium niebieski, Follower jasnoniebieski, Owner biały, Free szary */
+        --c-premium: #1e7bff; --c-follow: #7fb2ff; --c-owner: #f2f4f8; --c-locked: #5d6578;
+        --series: #1e7bff;
         --grid: #1a2232;
       }
       * { box-sizing: border-box; }
       html, body { margin: 0; }
       body {
         font-family: "Sora", "Segoe UI", sans-serif; color: var(--text); font-size: 14px; min-height: 100vh;
-        background: radial-gradient(1100px 600px at 100% -10%, rgba(139, 92, 246, .10), transparent 60%),
-          radial-gradient(900px 500px at 0% 0%, rgba(34, 195, 238, .07), transparent 60%), var(--bg);
+        background: var(--bg);
       }
       button { font-family: inherit; cursor: pointer; }
       .wrap { max-width: 1200px; margin: 0 auto; padding: 28px 24px 60px; }
@@ -49,14 +48,14 @@
       header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
       header.top h1 { font-size: 26px; margin: 14px 0 2px; letter-spacing: -.4px; }
       .actions { display: flex; gap: 8px; align-items: center; }
-      .demo-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #fcd34d; background: rgba(184, 128, 11, .18); padding: 4px 8px; border-radius: 6px; }
+      .demo-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--accent); background: rgba(30, 123, 255, .14); padding: 4px 8px; border-radius: 6px; }
       .grid { display: grid; gap: 14px; }
       .kpis { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
       .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; min-width: 0; }
       .kpi .label { font-size: 12px; color: var(--text-3); font-weight: 600; letter-spacing: .3px; }
       .kpi .val { font-size: 30px; font-weight: 700; margin-top: 6px; letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
       .kpi .sub { font-size: 12px; color: var(--text-2); margin-top: 4px; }
-      .kpi.hero { background: linear-gradient(135deg, rgba(34, 195, 238, .10), rgba(139, 92, 246, .08) 70%, var(--card)); border-color: var(--border-2); }
+      .kpi.hero { background: var(--card); border-color: var(--border-2); }
       .active3 { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
       .active3 div b { display: block; font-size: 19px; font-variant-numeric: tabular-nums; }
       .active3 div span { font-size: 11.5px; color: var(--text-3); }
@@ -120,10 +119,10 @@
       .who b { display: block; font-size: 13px; }
       .who span { color: var(--text-3); font-size: 11.5px; }
       .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; }
-      .pill.premium { color: #fcd34d; background: rgba(184, 128, 11, .2); }
-      .pill.owner { color: #c4b5fd; background: rgba(139, 92, 246, .2); }
-      .pill.follow { color: #67e8f9; background: rgba(27, 159, 208, .18); }
-      .pill.locked { color: #f9a8c9; background: rgba(217, 84, 138, .16); }
+      .pill.premium { color: #fff; background: var(--accent); }
+      .pill.owner { color: var(--bg); background: var(--text); }
+      .pill.follow { color: var(--text); box-shadow: inset 0 0 0 1px var(--text-2); }
+      .pill.locked { color: var(--text-2); background: #151b27; }
       .pill.none { color: var(--text-3); background: #151d2c; }
       .online { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-right: 6px; vertical-align: middle; }
       .feed { display: flex; flex-direction: column; max-height: 520px; overflow-y: auto; margin: 0 -18px -18px; }
