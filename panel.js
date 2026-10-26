@@ -83,6 +83,33 @@ function render(s) {
 
   users(s.users || []);
   recent(s.recent || []);
+  referrals(s.referrals || [], s.top_referrers || [], s.referral_codes ?? 0);
+}
+
+/* ───────── polecenia ───────── */
+
+const person = (name, id) =>
+  name || id ? `<b>${esc(name || "?")}</b>${id ? `<span title="ID Discord">${esc(id)}</span>` : ""}` : `<b class="dim">Niezalogowany</b>`;
+
+function referrals(list, top, codes) {
+  $("ref-hint").textContent = `${fmt(list.length)} poleceń · ${fmt(codes)} wygenerowanych kodów · +7 dni Premium za każde polecenie`;
+  $("referrals").innerHTML = list.length
+    ? list
+        .map(
+          (r) => `<tr>
+        <td title="${fullDate(r.created_at)}">${ago(r.created_at)}</td>
+        <td class="who">${person(r.referrer_name, r.referrer_id)}</td>
+        <td><code class="ref-code">${esc(r.code)}</code></td>
+        <td class="who">${person(r.referred_name, r.referred_id)}</td>
+      </tr>`,
+        )
+        .join("")
+    : `<tr><td colspan="4" class="empty">Nikt jeszcze nie użył kodu polecenia</td></tr>`;
+  const days = (u) => (u ? Math.max(0, Math.ceil((new Date(u) - Date.now()) / 86400000)) : 0);
+  bars(
+    $("top-referrers"),
+    top.map((t) => ({ name: `${t.name || "?"} · ${t.code}${days(t.premium_until) ? ` · ${days(t.premium_until)} dni Premium` : ""}`, n: t.count })),
+  );
 }
 
 /* ───────── użytkownicy i aktywność ───────── */
@@ -293,6 +320,17 @@ function demoData() {
       ["Kacper", "tweak_on", { id: "net-nagle" }, 1], ["Kacper", "app_open", {}, 5], ["zmora", "follow_unlock", {}, 40],
       ["xNeo", "game_launch", { name: "Fortnite" }, 600], [null, "setup_install", {}, 900], ["Ola", "ram_clean", {}, 4000],
     ].map(([name, event, props, minAgo]) => ({ discord_name: name, event, props, created_at: new Date(Date.now() - minAgo * 60000).toISOString() })),
+    referrals: [
+      ["Kacper", "bj25g1", "zmora", 30], ["Kacper", "bj25g1", "Ola", 900], ["xNeo", "k7m2qa", "Bartek", 3000],
+    ].map(([who, code, invited, minAgo], i) => ({
+      created_at: new Date(Date.now() - minAgo * 60000).toISOString(), code, referrer_name: who, referrer_id: `80247919837066${1000 + i}`,
+      referred_name: invited, referred_id: `11392844978807${6000 + i}`,
+    })),
+    top_referrers: [
+      { code: "bj25g1", name: "Kacper", count: 2, premium_until: new Date(Date.now() + 14 * 86400000).toISOString() },
+      { code: "k7m2qa", name: "xNeo", count: 1, premium_until: new Date(Date.now() + 5 * 86400000).toISOString() },
+    ],
+    referral_codes: 41,
   };
 }
 
