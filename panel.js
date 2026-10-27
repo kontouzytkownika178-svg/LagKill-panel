@@ -45,6 +45,17 @@ function showLogin(msg) {
 
 /* ───────── render ───────── */
 
+/* ikony KPI — inline SVG, kolor dziedziczony z .ico */
+const ico = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const ICON = {
+  installs: ico(`<path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/>`),
+  users: ico(`<path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17.5 11a3 3 0 1 0 0-6M21 19v-1a4 4 0 0 0-3-3.87"/>`),
+  launches: ico(`<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/>`),
+  active: ico(`<path d="M3 12h4l3 8 4-16 3 8h4"/>`),
+  discord: ico(`<path d="M21 15a4 4 0 0 1-4 4H8l-5 3V6a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>`),
+  premium: ico(`<path d="M3 7l4.5 4.5L12 5l4.5 6.5L21 7l-2 11H5L3 7z"/>`),
+};
+
 let lastStats = null;
 window.addEventListener("resize", () => lastStats && render(lastStats));
 
@@ -55,13 +66,13 @@ function render(s) {
   $("updated").textContent = `Zaktualizowano ${new Date(s.generated_at).toLocaleString("pl-PL")} · odświeża się co minutę`;
 
   $("kpis").innerHTML = `
-    <div class="card kpi hero"><div class="label">Instalacje</div><div class="val">${fmt(t.installs)}</div><div class="sub">+ ${fmt(t.updates)} aktualizacji</div></div>
-    <div class="card kpi"><div class="label">Użytkownicy</div><div class="val">${fmt(t.users)}</div><div class="sub">unikalne instalacje aplikacji</div></div>
-    <div class="card kpi"><div class="label">Uruchomienia</div><div class="val">${fmt(t.launches)}</div><div class="sub">łącznie</div></div>
-    <div class="card kpi"><div class="label">Aktywni</div>
+    <div class="card kpi hero"><div class="label"><span class="ico">${ICON.installs}</span>Instalacje</div><div class="val">${fmt(t.installs)}</div><div class="sub">+ ${fmt(t.updates)} aktualizacji</div></div>
+    <div class="card kpi"><div class="label"><span class="ico">${ICON.users}</span>Użytkownicy</div><div class="val">${fmt(t.users)}</div><div class="sub">unikalne instalacje aplikacji</div></div>
+    <div class="card kpi"><div class="label"><span class="ico">${ICON.launches}</span>Uruchomienia</div><div class="val">${fmt(t.launches)}</div><div class="sub">łącznie</div></div>
+    <div class="card kpi"><div class="label"><span class="ico">${ICON.active}</span>Aktywni</div>
       <div class="active3"><div><b>${fmt(a.today)}</b><span>dziś</span></div><div><b>${fmt(a.d7)}</b><span>7 dni</span></div><div><b>${fmt(a.d30)}</b><span>30 dni</span></div></div></div>
-    <div class="card kpi"><div class="label">Logowania Discord</div><div class="val">${fmt(t.discord_users)}</div><div class="sub">unikalni użytkownicy</div></div>
-    <div class="card kpi"><div class="label">Premium</div><div class="val">${fmt(p.premium)}</div><div class="sub">aktywni z rangą · 30 dni</div></div>`;
+    <div class="card kpi"><div class="label"><span class="ico">${ICON.discord}</span>Logowania Discord</div><div class="val">${fmt(t.discord_users)}</div><div class="sub">unikalni użytkownicy</div></div>
+    <div class="card kpi"><div class="label"><span class="ico">${ICON.premium}</span>Premium</div><div class="val">${fmt(p.premium)}</div><div class="sub">aktywni z rangą · 30 dni</div></div>`;
 
   lineChart($("chart-active"), s.daily.map((d) => ({ x: d.day, y: d.active })), "aktywnych");
   barChart($("chart-installs"), s.daily.map((d) => ({ x: d.day, y: d.installs })), "instalacji");
