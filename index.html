@@ -4,476 +4,488 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>LagKill — Panel</title>
+    <title>LagKill — Premium Panel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --bg: #04060b; --bg-2: #070a11; --card: #0a0e17; --card-2: #0e131e; --border: #161c29; --border-2: #232b3b;
-        --text: #f2f4f8; --text-2: #8b94a7; --text-3: #5d6578;
-        --accent: #1e7bff; --accent-2: #4d96ff; --accent-soft: rgba(30, 123, 255, .12);
-        --grad: linear-gradient(135deg, #8fbcff, var(--accent));
-        /* rangi: Premium niebieski, Follower jasnoniebieski, Owner biały, Free szary */
-        --c-premium: #1e7bff; --c-follow: #7fb2ff; --c-owner: #f2f4f8; --c-locked: #5d6578;
-        --series: #1e7bff; --grid: #18202f;
-        --radius: 14px; --side: 256px;
-        --shadow-card: inset 0 1px 0 rgba(255, 255, 255, .035), 0 20px 44px -30px rgba(0, 0, 0, .95);
+        --bg: #020408; --bg-alt: #05080f; --card: rgba(10, 15, 25, 0.7); --card-hover: rgba(15, 22, 38, 0.85);
+        --border: rgba(255, 255, 255, 0.08); --border-hover: rgba(255, 255, 255, 0.15);
+        --text: #ffffff; --text-muted: #94a3b8; --text-dim: #64748b;
+        --accent: #3b82f6; --accent-glow: rgba(59, 130, 246, 0.5); --accent-soft: rgba(59, 130, 246, 0.1);
+        --success: #10b981; --danger: #ef4444;
+        --grad: linear-gradient(135deg, #60a5fa, #3b82f6);
+        --radius-lg: 24px; --radius-md: 16px; --radius-sm: 12px;
+        --side-w: 280px;
+        --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
       }
-      * { box-sizing: border-box; }
-      html, body { margin: 0; }
+      * { box-sizing: border-box; outline: none; }
+      html, body { margin: 0; padding: 0; min-height: 100vh; overflow-x: hidden; }
       body {
-        font-family: "Sora", "Segoe UI", sans-serif; color: var(--text); font-size: 14px; min-height: 100vh;
-        background-color: var(--bg);
-        background-image:
-          radial-gradient(920px 440px at 10% -10%, rgba(30, 123, 255, .16), transparent 70%),
-          radial-gradient(760px 400px at 92% -6%, rgba(77, 150, 255, .10), transparent 72%),
-          linear-gradient(180deg, #06090f, #04060b 46%);
-        background-attachment: fixed;
-        -webkit-font-smoothing: antialiased;
+        font-family: "Sora", sans-serif; color: var(--text); background: var(--bg);
+        background-image: 
+          radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+        background-attachment: fixed; -webkit-font-smoothing: antialiased;
       }
-      button { font-family: inherit; cursor: pointer; }
-      ::selection { background: rgba(30, 123, 255, .32); }
-      *::-webkit-scrollbar { width: 10px; height: 10px; }
+      button { border: none; background: none; color: inherit; font-family: inherit; cursor: pointer; transition: all 0.2s; }
+      input { font-family: inherit; }
+
+      /* Scrollbar */
+      *::-webkit-scrollbar { width: 6px; height: 6px; }
       *::-webkit-scrollbar-track { background: transparent; }
-      *::-webkit-scrollbar-thumb { background: #1c2331; border: 2px solid transparent; background-clip: padding-box; border-radius: 99px; }
-      *::-webkit-scrollbar-thumb:hover { background: #2b3446; background-clip: padding-box; }
-      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      *::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+      *::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
-      .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -.2px; }
-      .brand img { width: 34px; height: 34px; border-radius: 10px; box-shadow: 0 10px 24px -14px rgba(30, 123, 255, .9); }
-      .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
-      .muted { color: var(--text-2); }
-      .dim { color: var(--text-3); }
-
-      .btn {
-        height: 36px; padding: 0 15px; border-radius: 10px; border: 1px solid var(--border-2);
-        background: linear-gradient(180deg, #111828, #0d1320); color: var(--text); font-weight: 600; font-size: 13px;
-        transition: border-color .15s, background .15s, transform .1s, box-shadow .15s;
-      }
-      .btn:hover { border-color: #3a4a6a; background: linear-gradient(180deg, #151d2f, #0f1625); }
-      .btn:active { transform: translateY(1px); }
-      .btn.ghost { background: rgba(255, 255, 255, .03); }
-      .btn.ghost:hover { background: rgba(255, 255, 255, .065); }
-      .btn.primary {
-        background: linear-gradient(180deg, var(--accent-2), var(--accent)); border: none; color: #fff;
-        box-shadow: 0 12px 28px -14px rgba(30, 123, 255, .95);
-      }
-      .btn.primary:hover { filter: brightness(1.07); border: none; }
-
-      /* ── logowanie ── */
-      .login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
-      .login-box {
-        position: relative; width: min(390px, 100%); background: linear-gradient(180deg, var(--card-2), var(--card));
-        border: 1px solid var(--border-2); border-radius: 20px; padding: 34px 30px; text-align: center;
-        box-shadow: 0 46px 100px -55px rgba(30, 123, 255, .75), inset 0 1px 0 rgba(255, 255, 255, .04);
-      }
-      .login-box::before {
-        content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-        background: linear-gradient(140deg, rgba(30, 123, 255, .55), transparent 42%, transparent 58%, rgba(30, 123, 255, .3));
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor; mask-composite: exclude;
-      }
-      .login-box h1 { font-size: 22px; margin: 18px 0 6px; letter-spacing: -.3px; }
-      .login-box input {
-        width: 100%; height: 44px; margin: 18px 0 12px; border-radius: 10px; border: 1px solid var(--border-2);
-        background: #0c1220; color: var(--text); padding: 0 14px; font-family: inherit; font-size: 14px; outline: none;
-        transition: border-color .15s, box-shadow .15s;
-      }
-      .login-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-      .login-box .btn { width: 100%; height: 44px; }
-      .err { color: #fca5a5; font-size: 13px; min-height: 18px; margin-top: 10px; }
-      .link { background: none; border: none; color: var(--text-3); font-size: 12.5px; margin-top: 14px; text-decoration: underline; transition: color .15s; }
-      .link:hover { color: var(--accent-2); }
-
-      /* ── układ: sidebar + treść ── */
-      .shell { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); min-height: 100vh; }
-      .sidebar {
-        position: sticky; top: 0; z-index: 30; height: 100vh; display: flex; flex-direction: column;
-        padding: 18px 14px; gap: 4px;
-        background: linear-gradient(180deg, rgba(11, 16, 25, .92), rgba(4, 6, 11, .97));
-        border-right: 1px solid var(--border); backdrop-filter: blur(14px);
-      }
-      .sidebar .brand { padding: 4px 8px 16px; }
-      .side-label { font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text-3); padding: 6px 10px 8px; }
-      .nav { display: flex; flex-direction: column; gap: 3px; }
-      .nav-item {
-        position: relative; display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 11px;
-        border: 1px solid transparent; border-radius: 11px; background: none; color: var(--text-2);
-        font-size: 13.5px; font-weight: 600; text-align: left;
-        transition: color .15s, background .15s, border-color .15s;
-      }
-      .nav-item svg { width: 17px; height: 17px; flex: 0 0 auto; opacity: .8; }
-      .nav-item:hover { color: var(--text); background: rgba(255, 255, 255, .035); }
-      .nav-item.is-active {
-        color: #fff; background: linear-gradient(180deg, rgba(30, 123, 255, .22), rgba(30, 123, 255, .07));
-        border-color: rgba(30, 123, 255, .4);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 14px 30px -20px rgba(30, 123, 255, .95);
-      }
-      .nav-item.is-active svg { opacity: 1; color: var(--accent-2); }
-      .nav-item.is-active::before {
-        content: ""; position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
-        width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, var(--accent-2), var(--accent));
-      }
-      .nav-badge {
-        margin-left: auto; font-size: 11px; font-weight: 700; color: var(--text-2); background: rgba(255, 255, 255, .06);
-        border: 1px solid var(--border-2); padding: 1px 7px; border-radius: 999px; font-variant-numeric: tabular-nums;
-      }
-      .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
-      .side-foot .btn { width: 100%; }
-      .side-note { text-align: center; font-size: 10.5px; color: var(--text-3); letter-spacing: .4px; padding-top: 2px; }
-
-      .main { min-width: 0; display: flex; flex-direction: column; }
-      .topbar {
-        position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 16px 26px;
-        background: linear-gradient(180deg, rgba(5, 7, 12, .93), rgba(5, 7, 12, .72));
-        backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);
-      }
-      .topbar h1 { font-size: 21px; margin: 0; letter-spacing: -.4px; }
-      .tb-sub { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-top: 3px; }
-      .live { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pulse 2.6s ease-out infinite; }
-      .tb-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-      .menu-btn {
-        display: none; width: 38px; height: 38px; place-items: center; border-radius: 10px;
-        border: 1px solid var(--border-2); background: rgba(255, 255, 255, .03); color: var(--text);
-      }
-      .menu-btn svg { width: 18px; height: 18px; }
-      .content { padding: 22px 26px 72px; }
-      .view { display: none; }
-      .view.is-active { display: block; animation: rise .35s cubic-bezier(.2, .7, .3, 1) both; }
-      .scrim { display: none; position: fixed; inset: 0; z-index: 25; background: rgba(2, 4, 8, .6); backdrop-filter: blur(2px); }
-
-      .demo-badge {
-        font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--accent-2);
-        background: var(--accent-soft); border: 1px solid rgba(30, 123, 255, .35); padding: 4px 9px; border-radius: 999px;
-      }
-
-      /* ── karty, siatki ── */
-      .grid { display: grid; gap: 14px; }
-      .kpis { grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); }
-      .card {
-        position: relative; min-width: 0; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius);
-        background: linear-gradient(180deg, var(--card-2), var(--card));
-        box-shadow: var(--shadow-card); transition: border-color .18s, box-shadow .18s;
-      }
-      .card::before {
-        content: ""; position: absolute; left: 14px; right: 14px; top: 0; height: 1px; pointer-events: none;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .07), transparent);
-      }
-      .card:hover { border-color: var(--border-2); box-shadow: var(--shadow-card), 0 26px 60px -40px rgba(30, 123, 255, .55); }
-
-      .view > .grid + .grid { margin-top: 14px; }
-      .two { grid-template-columns: 2fr 1fr; }
-      .three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-      .users-grid { grid-template-columns: minmax(0, 1fr) 340px; }
-
-      /* ── KPI ── */
-      .kpi .label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); font-weight: 600; letter-spacing: .3px; }
-      .kpi .ico { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-2); flex: 0 0 auto; }
-      .kpi .ico svg { width: 15px; height: 15px; }
-      .kpi .val { font-size: 30px; font-weight: 700; margin-top: 10px; letter-spacing: -.6px; font-variant-numeric: tabular-nums; }
-      .kpi .sub { font-size: 12px; color: var(--text-2); margin-top: 4px; }
-      .kpi.hero {
-        border-color: rgba(30, 123, 255, .45);
-        background: linear-gradient(180deg, rgba(30, 123, 255, .12), var(--card) 64%);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 24px 60px -34px rgba(30, 123, 255, .85);
-      }
-      .kpi.hero .val { background: linear-gradient(180deg, #fff, #9dc4ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
-      .active3 { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
-      .active3 div { min-width: 46px; }
-      .active3 div b { display: block; font-size: 19px; font-variant-numeric: tabular-nums; }
-      .active3 div span { font-size: 11.5px; color: var(--text-3); }
-
-      /* ── nagłówki sekcji ── */
-      h2 { display: flex; align-items: center; gap: 9px; font-size: 14px; margin: 0 0 4px; font-weight: 600; letter-spacing: .1px; }
-      h2::before {
-        content: ""; width: 3px; height: 14px; border-radius: 99px; flex: 0 0 auto;
-        background: linear-gradient(180deg, var(--accent-2), var(--accent)); box-shadow: 0 0 12px rgba(30, 123, 255, .6);
-      }
-      .card .hint { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
-
-      /* ── wykresy ── */
-      .chart { position: relative; }
-      .chart svg { display: block; width: 100%; overflow: visible; }
-      .axis text { fill: var(--text-3); font-size: 11px; font-family: Sora, sans-serif; }
-      .tip {
-        position: absolute; pointer-events: none; padding: 8px 11px; border-radius: 10px; font-size: 12px; white-space: nowrap;
-        background: rgba(9, 13, 21, .96); border: 1px solid var(--border-2); backdrop-filter: blur(10px);
-        box-shadow: 0 20px 44px -22px rgba(0, 0, 0, .95); transform: translate(-50%, -110%); opacity: 0; transition: opacity .12s;
-      }
-      .tip b { font-size: 14px; display: block; }
-
-      /* ── listy z paskami ── */
-      .bars { display: flex; flex-direction: column; gap: 10px; }
-      .bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 10px; align-items: center; font-size: 12.5px; }
-      .bar-row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
-      .bar-track { height: 7px; background: #131a28; border-radius: 99px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .03); }
-      .bar-fill {
-        height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent-2));
-        box-shadow: 0 0 12px rgba(30, 123, 255, .45); transition: width .5s cubic-bezier(.4, 0, .2, 1);
-      }
-      .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
-      .empty { color: var(--text-3); font-size: 12.5px; padding: 10px 0; }
-
-      /* ── podział planów ── */
-      .stack {
-        display: flex; height: 28px; border-radius: 9px; overflow: hidden; gap: 2px; margin: 8px 0 16px;
-        background: #0a0f18; box-shadow: inset 0 0 0 1px var(--border);
-      }
-      .stack div { height: 100%; min-width: 3px; transition: filter .15s; }
-      .stack div:hover { filter: brightness(1.18); }
-      .legend { display: grid; grid-template-columns: 1fr; gap: 9px; }
-      .legend div { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
-      .legend i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; box-shadow: 0 0 10px rgba(0, 0, 0, .45); }
-      .legend b { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
-      .legend b small { color: var(--text-3); font-weight: 500; margin-left: 6px; }
-      .counters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-      .counters div {
-        background: linear-gradient(180deg, #0f1521, #0b111b); border: 1px solid var(--border); border-radius: 12px;
-        padding: 13px; transition: border-color .15s, transform .15s;
-      }
-      .counters div:hover { border-color: var(--border-2); transform: translateY(-1px); }
-      .counters b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
-      .counters span { font-size: 11.5px; color: var(--text-3); }
       .hidden { display: none !important; }
 
-      /* ── użytkownicy, tabele, aktywność ── */
-      .scroll, .feed { scrollbar-width: thin; scrollbar-color: var(--border-2) transparent; }
-      .users-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-      .search {
-        height: 34px; width: min(260px, 100%); border-radius: 10px; border: 1px solid var(--border-2); background: #0c1220;
-        color: var(--text); padding: 0 12px; font-family: inherit; font-size: 13px; outline: none; transition: border-color .15s, box-shadow .15s;
+      /* ── Logowanie ── */
+      .login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+      .glass-box {
+        width: 100%; max-width: 420px; padding: 40px; border-radius: var(--radius-lg);
+        background: var(--card); backdrop-filter: blur(20px); border: 1px solid var(--border);
+        box-shadow: var(--shadow); text-align: center;
       }
-      .search:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
-      .table-wrap { overflow-x: auto; margin: 0 -18px -18px; border-radius: 0 0 var(--radius) var(--radius); }
-      table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-      th {
-        text-align: left; font-size: 11px; font-weight: 600; letter-spacing: .3px; color: var(--text-3);
-        padding: 11px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; position: sticky; top: 0; z-index: 1;
-        background: rgba(12, 17, 27, .95); backdrop-filter: blur(10px);
+      .logo-main { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 30px; }
+      .logo-main img { width: 48px; height: 48px; border-radius: 12px; box-shadow: 0 0 20px var(--accent-glow); }
+      .logo-main span { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+      .logo-main .accent { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      
+      .input-group { position: relative; margin-bottom: 20px; }
+      .input-group input {
+        width: 100%; height: 52px; padding: 0 20px; background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border); border-radius: var(--radius-sm); color: #fff;
+        font-size: 15px; transition: all 0.2s;
       }
-      td { padding: 11px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-      tr:last-child td { border-bottom: none; }
-      tbody tr { transition: background .12s; }
-      tbody tr:hover { background: rgba(30, 123, 255, .06); }
-      th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
-      th:first-child, td:first-child { padding-left: 18px; }
-      .scroll { max-height: 520px; overflow-y: auto; }
-      .who b { display: block; font-size: 13px; }
-      .who span { color: var(--text-3); font-size: 11.5px; }
-      .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 9px; border-radius: 999px; letter-spacing: .2px; border: 1px solid transparent; }
-      .pill.premium { color: #fff; background: linear-gradient(180deg, var(--accent-2), var(--accent)); box-shadow: 0 8px 20px -12px rgba(30, 123, 255, 1); }
-      .pill.owner { color: var(--bg); background: linear-gradient(180deg, #fff, #c9d3e4); }
-      .pill.follow { color: var(--text); background: rgba(127, 178, 255, .10); border-color: rgba(127, 178, 255, .38); }
-      .pill.locked { color: var(--text-2); background: #141a26; border-color: var(--border-2); }
-      .pill.none { color: var(--text-3); background: #121824; border-color: var(--border); }
-      code.ref-code {
-        font-family: Consolas, "Cascadia Mono", monospace; font-size: 13px; letter-spacing: 2px; padding: 4px 9px;
-        border-radius: 8px; background: #111825; border: 1px solid var(--border-2); color: #cfe0ff;
+      .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+      
+      .btn-primary {
+        width: 100%; height: 52px; background: var(--grad); border-radius: var(--radius-sm);
+        color: #fff; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px var(--accent-glow);
       }
-      .online { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-right: 6px; vertical-align: middle; animation: pulse 2.6s ease-out infinite; }
-      @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .55); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
-      .feed { display: flex; flex-direction: column; max-height: 520px; overflow-y: auto; margin: 0 -18px -18px; }
-      .feed-row { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 10px 18px; border-bottom: 1px solid var(--border); font-size: 12.5px; transition: background .12s; }
-      .feed-row:hover { background: rgba(255, 255, 255, .022); }
-      .feed-row:last-child { border-bottom: none; }
-      .feed-row b { font-weight: 600; }
-      .feed-row .what { color: var(--text-2); grid-column: 1; line-height: 1.45; min-width: 0; overflow-wrap: anywhere; }
-      .feed-row time { color: var(--text-3); font-size: 11.5px; grid-row: 1; grid-column: 2; }
+      .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--accent-glow); filter: brightness(1.1); }
+      .btn-primary:active { transform: translateY(0); }
+      
+      .err-msg { color: var(--danger); font-size: 13px; margin-top: 15px; min-height: 18px; }
+      .demo-link { display: inline-block; margin-top: 20px; color: var(--text-muted); font-size: 13px; border-bottom: 1px solid transparent; }
+      .demo-link:hover { color: #fff; border-bottom-color: #fff; }
 
-      @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+      /* ── Główny układ ── */
+      .layout { display: flex; min-height: 100vh; }
+      
+      /* Sidebar Modern */
+      .sidebar {
+        width: var(--side-w); height: 100vh; position: fixed; left: 0; top: 0;
+        background: rgba(5, 8, 15, 0.5); backdrop-filter: blur(25px);
+        border-right: 1px solid var(--border); display: flex; flex-direction: column;
+        padding: 30px 20px; z-index: 100; transition: transform 0.3s;
+      }
+      .side-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; padding-left: 10px; }
+      .side-brand img { width: 32px; height: 32px; border-radius: 8px; }
+      .side-brand span { font-size: 20px; font-weight: 700; }
+      
+      .nav-group { margin-bottom: 30px; }
+      .nav-label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 15px 12px; }
+      .nav-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+      .nav-item {
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+        border-radius: var(--radius-sm); color: var(--text-muted); font-weight: 500;
+        text-decoration: none; transition: all 0.2s; position: relative;
+      }
+      .nav-item svg { width: 20px; height: 20px; opacity: 0.7; }
+      .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+      .nav-item.active { background: var(--accent-soft); color: var(--accent); }
+      .nav-item.active svg { opacity: 1; }
+      .nav-item.active::after {
+        content: ""; position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+        width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+        box-shadow: 0 0 10px var(--accent);
+      }
+      .badge {
+        margin-left: auto; background: rgba(255, 255, 255, 0.1); padding: 2px 8px;
+        border-radius: 20px; font-size: 11px; color: var(--text-muted);
+      }
+      
+      .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+      .btn-side {
+        display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+        border-radius: var(--radius-sm); color: var(--text-muted); font-size: 14px; font-weight: 500;
+      }
+      .btn-side:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+      .btn-side svg { width: 18px; height: 18px; flex-shrink: 0; }
 
-      /* ── widoki ── */
-      .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
-      .view-head h2 { font-size: 16px; margin: 0; }
-      .view-head .hint { margin: 4px 0 0; }
+      /* Main Content */
+      .main { flex: 1; margin-left: var(--side-w); padding: 40px; position: relative; }
+      .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; }
+      .view-info h1 { font-size: 32px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -1px; }
+      .view-info p { color: var(--text-muted); font-size: 14px; margin: 0; display: flex; align-items: center; gap: 8px; }
+      .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); }
 
-      @media (max-width: 1080px) { .users-grid { grid-template-columns: 1fr; } }
-      @media (max-width: 980px) {
-        .shell { grid-template-columns: 1fr; }
-        .sidebar {
-          position: fixed; top: 0; left: 0; width: 264px; transform: translateX(-103%);
-          transition: transform .26s cubic-bezier(.3, .8, .3, 1); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .9);
-        }
-        .shell.side-open .sidebar { transform: none; }
-        .shell.side-open .scrim { display: block; }
-        .menu-btn { display: grid; }
-        .content { padding: 18px 16px 72px; }
-        .topbar { padding: 12px 16px; }
-        .two, .three, .users-grid { grid-template-columns: 1fr; }
+      /* Views */
+      .view { display: none; animation: slideUp 0.4s ease-out forwards; }
+      .view.active { display: block; }
+      @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+      /* Dashboard Grid */
+      .dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+      .stat-card {
+        padding: 24px; border-radius: var(--radius-md); background: var(--card);
+        border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; overflow: hidden;
+      }
+      .stat-card::after {
+        content: ""; position: absolute; right: -20px; top: -20px; width: 80px; height: 80px;
+        background: var(--accent); filter: blur(60px); opacity: 0.1;
+      }
+      .stat-icon {
+        width: 44px; height: 44px; border-radius: 12px; background: var(--accent-soft);
+        display: flex; align-items: center; justify-content: center; color: var(--accent);
+        margin-bottom: 20px;
+      }
+      .stat-card h3 { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px 0; }
+      .stat-val { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
+      .stat-sub { font-size: 12px; color: var(--text-dim); }
+
+      /* Sections */
+      .sec-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
+      .sec-grid-users { grid-template-columns: minmax(0, 1fr) 360px; }
+      .sec-grid > * { min-width: 0; }
+      .glass-panel {
+        padding: 24px; border-radius: var(--radius-md); background: var(--card);
+        border: 1px solid var(--border); box-shadow: var(--shadow);
+      }
+      .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+      .panel-head h2 { font-size: 18px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px; }
+      .panel-head h2 svg { color: var(--accent); }
+
+      /* Modern Rows (No more "slabe" tables) */
+      .row-list { display: flex; flex-direction: column; gap: 10px; }
+      .glass-row {
+        display: flex; align-items: center; padding: 16px 20px; border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.02); border: 1px solid transparent;
+        transition: all 0.2s;
+      }
+      .glass-row:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--border-hover); transform: translateX(5px); }
+      
+      .user-info { display: flex; align-items: center; gap: 15px; flex: 1; }
+      .user-avatar { width: 40px; height: 40px; border-radius: 12px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+      .user-meta b { display: block; font-size: 15px; margin-bottom: 2px; }
+      .user-meta span { font-size: 12px; color: var(--text-muted); }
+      
+      .pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+      .pill.premium { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.3); }
+      .pill.owner { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
+      .pill.follow { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, 0.45); }
+      .pill.locked { background: rgba(100, 116, 139, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+      .row-stat { text-align: right; margin-left: 30px; }
+      .row-stat b { display: block; font-size: 16px; }
+      .row-stat span { font-size: 11px; color: var(--text-dim); }
+
+      /* Feed */
+      .feed-item { display: flex; gap: 15px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+      .feed-item:last-child { border-bottom: none; }
+      .feed-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 6px; flex-shrink: 0; }
+      .feed-content b { color: #fff; font-size: 14px; }
+      .feed-content p { margin: 4px 0 0; font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+      .feed-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+
+      /* Admin View */
+      .admin-form { max-width: 500px; margin-top: 20px; }
+      .form-group { margin-bottom: 20px; }
+      .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+      .form-group input {
+        width: 100%; height: 48px; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); color: #fff; padding: 0 15px; font-size: 14px;
+      }
+      .form-group input:focus { border-color: var(--accent); }
+      .code-preview {
+        margin-top: 20px; padding: 20px; border-radius: var(--radius-sm); background: var(--accent-soft);
+        border: 1px dashed var(--accent); color: var(--accent); font-weight: 700; text-align: center; font-size: 24px; letter-spacing: 4px;
+      }
+
+      /* Search & Filters */
+      .search-box { position: relative; width: 300px; }
+      .search-box input {
+        width: 100%; height: 40px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border);
+        border-radius: 20px; padding: 0 40px 0 15px; color: #fff; font-size: 13px;
+      }
+      .search-box svg { position: absolute; right: 15px; top: 11px; width: 18px; height: 18px; color: var(--text-dim); }
+
+      /* Charts */
+      .chart-container { height: 260px; position: relative; margin-top: 10px; }
+
+      /* Elementy bez stylu w redesignie */
+      .muted { color: var(--text-muted); }
+      .side-note { padding: 8px 16px 0; font-size: 11px; color: var(--text-dim); }
+      .tb-actions { display: flex; align-items: center; gap: 10px; }
+      .demo-badge { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--accent); background: var(--accent-soft); padding: 6px 10px; border-radius: 8px; }
+      .grid { display: grid; gap: 20px; }
+      .grid.three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+      .grid.three h2 { font-size: 16px; margin: 0 0 18px; }
+      .feed { max-height: 640px; overflow-y: auto; }
+      .empty-row { justify-content: center; color: var(--text-dim); }
+      .admin-msg { margin-top: 14px; font-size: 13px; min-height: 18px; }
+      .admin-msg.err { color: var(--danger); }
+      #menu-toggle { display: none; margin-right: 15px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+      .menu-shade { display: none; }
+
+      /* Responsive */
+      @media (max-width: 1200px) {
+        .dash-grid { grid-template-columns: repeat(2, 1fr); }
+        .sec-grid, .sec-grid-users { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 900px) {
+        .sidebar { transform: translateX(-100%); }
+        .main { margin-left: 0; padding: 20px; }
+        .layout.menu-open .sidebar { transform: translateX(0); }
+        .layout.menu-open .menu-shade { display: block; position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, 0.5); }
+        #menu-toggle { display: inline-flex; }
+        .top-bar { justify-content: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 24px; }
+        .view-info h1 { font-size: 24px; }
+        .dash-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-card { padding: 16px; }
+        .stat-val { font-size: 24px; }
+        .search-box { width: 100%; }
+        .panel-head { flex-wrap: wrap; gap: 12px; }
+        .glass-row { flex-wrap: wrap; gap: 10px; }
+        .row-stat { margin-left: 0; }
       }
     </style>
   </head>
   <body>
     <!-- Logowanie -->
     <div id="login" class="login">
-      <div class="login-box">
-        <div class="brand" style="justify-content: center"><img src="logo.png" alt="" /> <span>Lag<span class="grad">Kill</span></span></div>
-        <h1>Panel statystyk</h1>
-        <div class="muted" style="font-size: 13px">Wpisz hasło ustawione w Supabase.</div>
+      <div class="glass-box">
+        <div class="logo-main">
+          <img src="logo.png" alt="LagKill" />
+          <span>Lag<span class="accent">Kill</span></span>
+        </div>
+        <h2 style="margin: 0 0 10px 0; font-size: 22px;">Panel Administracyjny</h2>
+        <p class="muted" style="margin-bottom: 30px;">Zaloguj się, aby zarządzać optymalizacją.</p>
         <form id="login-form">
-          <input id="pass" type="password" placeholder="Hasło do panelu" autocomplete="current-password" />
-          <button class="btn primary" type="submit">Zaloguj</button>
+          <div class="input-group">
+            <input id="pass" type="password" placeholder="Hasło dostępu" autocomplete="current-password" />
+          </div>
+          <button class="btn-primary" type="submit">Autoryzuj Dostęp</button>
         </form>
-        <div class="err" id="err"></div>
-        <button class="link" id="demo">Pokaż przykładowe dane</button>
+        <div class="err-msg" id="err"></div>
+        <button class="demo-link" id="demo">Tryb demonstracyjny</button>
       </div>
     </div>
 
     <!-- Panel -->
-    <div id="app" class="shell hidden">
-      <div class="scrim"></div>
-
+    <div id="app" class="layout hidden">
       <aside class="sidebar">
-        <div class="brand"><img src="logo.png" alt="" /> <span>Lag<span class="grad">Kill</span></span></div>
-        <div class="side-label">Panel</div>
-        <nav class="nav">
-          <button class="nav-item is-active" data-view="overview">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h8V3H3zM13 21h8v-6h-8zM13 3v8h8V3zM3 21h8v-6H3z"/></svg>
-            <span>Przegląd</span>
-          </button>
-          <button class="nav-item" data-view="users">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17.5 11a3 3 0 1 0 0-6M21 19v-1a4 4 0 0 0-3-3.87"/></svg>
-            <span>Użytkownicy</span><span class="nav-badge" id="nav-count-users">—</span>
-          </button>
-          <button class="nav-item" data-view="referrals">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
-            <span>Polecenia</span><span class="nav-badge" id="nav-count-ref">—</span>
-          </button>
-          <button class="nav-item" data-view="charts">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3.5-4 3 2.5L20 7"/></svg>
-            <span>Analityka</span>
-          </button>
-          <button class="nav-item" data-view="tweaks">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg>
-            <span>Tweaki i aplikacje</span>
-          </button>
-        </nav>
+        <div class="side-brand">
+          <img src="logo.png" alt="" />
+          <span>Lag<span class="grad" style="-webkit-background-clip: text; -webkit-text-fill-color: transparent; background-image: var(--grad);">Kill</span></span>
+        </div>
+        
+        <div class="nav-group">
+          <div class="nav-label">Główne</div>
+          <nav class="nav-list">
+            <button class="nav-item active" data-view="overview">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>Przegląd</span>
+            </button>
+            <button class="nav-item" data-view="users">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span>Użytkownicy</span>
+              <span class="badge" id="nav-count-users">0</span>
+            </button>
+            <button class="nav-item" data-view="referrals">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+              <span>Polecenia</span>
+              <span class="badge" id="nav-count-ref">0</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">Zaawansowane</div>
+          <nav class="nav-list">
+            <button class="nav-item" data-view="charts">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+              <span>Analityka</span>
+            </button>
+            <button class="nav-item" data-view="tweaks">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+              <span>Tweaki & Apps</span>
+            </button>
+            <button class="nav-item" data-view="admin">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>Zarządzanie</span>
+            </button>
+          </nav>
+        </div>
+
         <div class="side-foot">
-          <button class="btn ghost" id="refresh">Odśwież</button>
-          <button class="btn ghost" id="logout">Wyloguj</button>
-          <div class="side-note">LagKill · panel statystyk</div>
+          <button class="btn-side" id="refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span>Odśwież dane</span>
+          </button>
+          <button class="btn-side" id="logout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Wyloguj się</span>
+          </button>
+          <div class="side-note">Panel admina LagKill</div>
         </div>
       </aside>
 
-      <div class="main">
-        <header class="topbar">
-          <button class="menu-btn" id="menu-btn" aria-label="Pokaż menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      <div class="menu-shade" id="menu-shade"></div>
+      <main class="main">
+        <header class="top-bar">
+          <button id="menu-toggle" aria-label="Menu">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
-          <div>
+          <div class="view-info">
             <h1 id="view-title">Przegląd</h1>
-            <div class="tb-sub"><span class="live"></span><span class="dim" id="updated"></span></div>
+            <p><span class="status-dot"></span> System aktywny · <span id="updated">ładowanie...</span></p>
           </div>
           <div class="tb-actions">
-            <span id="demo-badge" class="demo-badge hidden">PRZYKŁADOWE DANE</span>
+            <span id="demo-badge" class="demo-badge hidden">TRYB DEMO</span>
           </div>
         </header>
 
         <div class="content">
-          <!-- Przegląd -->
-          <section class="view is-active" id="view-overview">
-            <div class="grid kpis" id="kpis"></div>
-            <div class="grid two">
-              <div class="card">
-                <h2>Instalacje dziennie</h2>
-                <div class="hint">Udane instalacje z LagKill Setup · 30 dni</div>
-                <div class="chart" id="chart-installs"></div>
+          <!-- Widok: Przegląd -->
+          <section class="view active" id="view-overview">
+            <div class="dash-grid" id="kpis">
+              <!-- JS: stat-card -->
+            </div>
+            
+            <div class="sec-grid">
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg> Trend instalacji</h2>
+                  <div class="stat-sub">Ostatnie 30 dni</div>
+                </div>
+                <div class="chart-container" id="chart-installs"></div>
               </div>
-              <div class="card">
-                <h2>Aktywność</h2>
-                <div class="hint">Łącznie od początku</div>
-                <div class="counters" id="counters"></div>
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Aktywność</h2>
+                </div>
+                <div class="counters" id="counters" style="display: flex; flex-direction: column; gap: 12px;">
+                  <!-- JS: counters -->
+                </div>
               </div>
             </div>
           </section>
 
-          <!-- Użytkownicy -->
+          <!-- Widok: Użytkownicy -->
           <section class="view" id="view-users">
-            <div class="grid users-grid">
-              <div class="card">
-                <div class="users-head">
-                  <div>
-                    <h2>Użytkownicy</h2>
-                    <div class="hint" id="users-hint">Każda instalacja z kontem Discord · ostatnio aktywni na górze</div>
+            <div class="sec-grid sec-grid-users">
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2>Użytkownicy</h2>
+                  <div class="search-box">
+                    <input id="user-search" type="text" placeholder="Szukaj użytkownika..." />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                   </div>
-                  <input id="user-search" class="search" type="search" placeholder="Szukaj nicku lub ID…" />
                 </div>
-                <div class="table-wrap scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Użytkownik</th><th>Plan</th><th class="num">Uruchomienia</th><th class="num">Tweaki</th><th class="num">Gry</th>
-                        <th>Ostatnio</th><th>Pierwszy raz</th><th>System</th>
-                      </tr>
-                    </thead>
-                    <tbody id="users"></tbody>
-                  </table>
+                <div class="row-list" id="users">
+                  <!-- JS: glass-row -->
                 </div>
               </div>
-              <div class="card">
-                <h2>Ostatnia aktywność</h2>
-                <div class="hint">Na żywo · ostatnie 80 zdarzeń</div>
-                <div class="feed" id="recent"></div>
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2>Ostatnia aktywność</h2>
+                </div>
+                <div class="feed" id="recent">
+                  <!-- JS: feed-item -->
+                </div>
               </div>
             </div>
           </section>
 
-          <!-- Polecenia -->
+          <!-- Widok: Polecenia -->
           <section class="view" id="view-referrals">
-            <div class="grid users-grid">
-              <div class="card">
-                <h2>Polecenia</h2>
-                <div class="hint" id="ref-hint">Kto kogo zaprosił i jakim kodem · +7 dni Premium za każde polecenie</div>
-                <div class="table-wrap scroll">
-                  <table>
-                    <thead>
-                      <tr><th>Kiedy</th><th>Zaprosił</th><th>Kod</th><th>Zaproszony</th></tr>
-                    </thead>
-                    <tbody id="referrals"></tbody>
-                  </table>
+            <div class="sec-grid">
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2>Log poleceń</h2>
+                  <div class="stat-sub" id="ref-hint">0 poleceń</div>
                 </div>
+                <div class="row-list" id="referrals"></div>
               </div>
-              <div class="card">
-                <h2>Najlepiej polecający</h2>
-                <div class="hint">Liczba zaproszonych · Premium z poleceń</div>
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2>Top polecający</h2>
+                </div>
                 <div class="bars" id="top-referrers"></div>
               </div>
             </div>
           </section>
 
-          <!-- Analityka -->
+          <!-- Widok: Analityka -->
           <section class="view" id="view-charts">
-            <div class="grid two">
-              <div class="card">
-                <h2>Aktywni użytkownicy dziennie</h2>
-                <div class="hint">Unikalne instalacje, które uruchomiły LagKill danego dnia · 30 dni</div>
-                <div class="chart" id="chart-active"></div>
+            <div class="sec-grid">
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2>Aktywni użytkownicy (DAU)</h2>
+                  <div class="stat-sub">30 dni</div>
+                </div>
+                <div class="chart-container" id="chart-active"></div>
               </div>
-              <div class="card">
-                <h2>Plany użytkowników</h2>
-                <div class="hint">Stan aktywnych użytkowników z 30 dni</div>
+              <div class="glass-panel">
+                <div class="panel-head">
+                  <h2>Struktura planów</h2>
+                </div>
                 <div id="plans"></div>
               </div>
             </div>
           </section>
 
-          <!-- Tweaki i aplikacje -->
+          <!-- Widok: Tweaki -->
           <section class="view" id="view-tweaks">
             <div class="grid three">
-              <div class="card"><h2>Najczęściej włączane tweaki</h2><div class="hint">30 dni</div><div class="bars" id="top-tweaks"></div></div>
-              <div class="card"><h2>Instalowane aplikacje</h2><div class="hint">30 dni</div><div class="bars" id="top-apps"></div></div>
-              <div class="card">
-                <h2>Wersje i system</h2><div class="hint">Aktywni użytkownicy · 30 dni</div>
+              <div class="glass-panel"><h2>Popularne tweaki</h2><div class="bars" id="top-tweaks"></div></div>
+              <div class="glass-panel"><h2>Instalowane aplikacje</h2><div class="bars" id="top-apps"></div></div>
+              <div class="glass-panel">
+                <h2>Systemy & Wersje</h2>
                 <div class="bars" id="versions"></div>
-                <div style="height: 14px"></div>
+                <div style="height: 20px;"></div>
                 <div class="bars" id="windows"></div>
               </div>
             </div>
           </section>
+
+          <!-- Widok: Zarządzanie (Admin) -->
+          <section class="view" id="view-admin">
+            <div class="glass-panel">
+              <div class="panel-head">
+                <h2>Własne kody polecające</h2>
+                <div class="stat-sub">Tylko dla administratorów</div>
+              </div>
+              <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 25px; line-height: 1.6;">
+                Podaj nick lub ID Discord użytkownika, aby zmienić jego kod na własny (np. <code>terox</code>) — jego dotychczasowe polecenia zostają.
+                Zostaw puste albo wpisz nazwę (np. kanału), aby utworzyć <b>kod partnerski</b> tylko do śledzenia, ilu osób przyszło z danego źródła.
+              </p>
+              
+              <form class="admin-form" id="admin-code-form">
+                <div class="form-group">
+                  <label>Nowy kod (3–20 znaków: a-z, 0-9, _)</label>
+                  <input type="text" id="admin-custom-code" placeholder="Wpisz kod..." maxlength="20" />
+                </div>
+                <div class="form-group">
+                  <label>Właściciel: nick lub ID Discord (opcjonalnie)</label>
+                  <input type="text" id="admin-owner" placeholder="np. T3rox albo 802479198370660383" maxlength="64" />
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 10px;">Utwórz kod</button>
+                <div class="admin-msg" id="admin-code-msg"></div>
+              </form>
+              
+              <div id="admin-code-result" class="hidden" style="margin-top: 30px;">
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">Kod utworzony pomyślnie:</p>
+                <div class="code-preview" id="admin-code-display">---</div>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;" id="admin-code-owner">---</p>
+              </div>
+            </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
 
     <script src="config.js"></script>
