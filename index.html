@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>LagKill — Panel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
       :root {
@@ -16,7 +17,7 @@
         /* rangi: Premium niebieski, Follower jasnoniebieski, Owner biały, Free szary */
         --c-premium: #1e7bff; --c-follow: #7fb2ff; --c-owner: #f2f4f8; --c-locked: #5d6578;
         --series: #1e7bff; --grid: #18202f;
-        --radius: 14px;
+        --radius: 14px; --side: 256px;
         --shadow-card: inset 0 1px 0 rgba(255, 255, 255, .035), 0 20px 44px -30px rgba(0, 0, 0, .95);
       }
       * { box-sizing: border-box; }
@@ -39,7 +40,6 @@
       *::-webkit-scrollbar-thumb:hover { background: #2b3446; background-clip: padding-box; }
       :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-      .wrap { max-width: min(1280px, 100%); margin: 0 auto; padding: 0 24px 60px; }
       .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -.2px; }
       .brand img { width: 34px; height: 34px; border-radius: 10px; box-shadow: 0 10px 24px -14px rgba(30, 123, 255, .9); }
       .grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -53,13 +53,15 @@
       }
       .btn:hover { border-color: #3a4a6a; background: linear-gradient(180deg, #151d2f, #0f1625); }
       .btn:active { transform: translateY(1px); }
+      .btn.ghost { background: rgba(255, 255, 255, .03); }
+      .btn.ghost:hover { background: rgba(255, 255, 255, .065); }
       .btn.primary {
         background: linear-gradient(180deg, var(--accent-2), var(--accent)); border: none; color: #fff;
         box-shadow: 0 12px 28px -14px rgba(30, 123, 255, .95);
       }
       .btn.primary:hover { filter: brightness(1.07); border: none; }
 
-      /* logowanie */
+      /* ── logowanie ── */
       .login { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
       .login-box {
         position: relative; width: min(390px, 100%); background: linear-gradient(180deg, var(--card-2), var(--card));
@@ -84,20 +86,69 @@
       .link { background: none; border: none; color: var(--text-3); font-size: 12.5px; margin-top: 14px; text-decoration: underline; transition: color .15s; }
       .link:hover { color: var(--accent-2); }
 
-      /* panel */
-      header.top {
-        position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between;
-        gap: 16px; flex-wrap: wrap; margin: 0 -24px 22px; padding: 20px 24px 16px;
-        background: linear-gradient(180deg, rgba(4, 6, 11, .94), rgba(4, 6, 11, .74));
+      /* ── układ: sidebar + treść ── */
+      .shell { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); min-height: 100vh; }
+      .sidebar {
+        position: sticky; top: 0; z-index: 30; height: 100vh; display: flex; flex-direction: column;
+        padding: 18px 14px; gap: 4px;
+        background: linear-gradient(180deg, rgba(11, 16, 25, .92), rgba(4, 6, 11, .97));
+        border-right: 1px solid var(--border); backdrop-filter: blur(14px);
+      }
+      .sidebar .brand { padding: 4px 8px 16px; }
+      .side-label { font-size: 10.5px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--text-3); padding: 6px 10px 8px; }
+      .nav { display: flex; flex-direction: column; gap: 3px; }
+      .nav-item {
+        position: relative; display: flex; align-items: center; gap: 11px; width: 100%; padding: 10px 11px;
+        border: 1px solid transparent; border-radius: 11px; background: none; color: var(--text-2);
+        font-size: 13.5px; font-weight: 600; text-align: left;
+        transition: color .15s, background .15s, border-color .15s;
+      }
+      .nav-item svg { width: 17px; height: 17px; flex: 0 0 auto; opacity: .8; }
+      .nav-item:hover { color: var(--text); background: rgba(255, 255, 255, .035); }
+      .nav-item.is-active {
+        color: #fff; background: linear-gradient(180deg, rgba(30, 123, 255, .22), rgba(30, 123, 255, .07));
+        border-color: rgba(30, 123, 255, .4);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 14px 30px -20px rgba(30, 123, 255, .95);
+      }
+      .nav-item.is-active svg { opacity: 1; color: var(--accent-2); }
+      .nav-item.is-active::before {
+        content: ""; position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
+        width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      }
+      .nav-badge {
+        margin-left: auto; font-size: 11px; font-weight: 700; color: var(--text-2); background: rgba(255, 255, 255, .06);
+        border: 1px solid var(--border-2); padding: 1px 7px; border-radius: 999px; font-variant-numeric: tabular-nums;
+      }
+      .side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+      .side-foot .btn { width: 100%; }
+      .side-note { text-align: center; font-size: 10.5px; color: var(--text-3); letter-spacing: .4px; padding-top: 2px; }
+
+      .main { min-width: 0; display: flex; flex-direction: column; }
+      .topbar {
+        position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 14px; padding: 16px 26px;
+        background: linear-gradient(180deg, rgba(5, 7, 12, .93), rgba(5, 7, 12, .72));
         backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);
       }
-      header.top h1 { font-size: 26px; margin: 14px 0 2px; letter-spacing: -.5px; }
-      .actions { display: flex; gap: 8px; align-items: center; }
+      .topbar h1 { font-size: 21px; margin: 0; letter-spacing: -.4px; }
+      .tb-sub { display: flex; align-items: center; gap: 7px; font-size: 12.5px; margin-top: 3px; }
+      .live { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; animation: pulse 2.6s ease-out infinite; }
+      .tb-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+      .menu-btn {
+        display: none; width: 38px; height: 38px; place-items: center; border-radius: 10px;
+        border: 1px solid var(--border-2); background: rgba(255, 255, 255, .03); color: var(--text);
+      }
+      .menu-btn svg { width: 18px; height: 18px; }
+      .content { padding: 22px 26px 72px; }
+      .view { display: none; }
+      .view.is-active { display: block; animation: rise .35s cubic-bezier(.2, .7, .3, 1) both; }
+      .scrim { display: none; position: fixed; inset: 0; z-index: 25; background: rgba(2, 4, 8, .6); backdrop-filter: blur(2px); }
+
       .demo-badge {
         font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--accent-2);
         background: var(--accent-soft); border: 1px solid rgba(30, 123, 255, .35); padding: 4px 9px; border-radius: 999px;
       }
 
+      /* ── karty, siatki ── */
       .grid { display: grid; gap: 14px; }
       .kpis { grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)); }
       .card {
@@ -111,6 +162,12 @@
       }
       .card:hover { border-color: var(--border-2); box-shadow: var(--shadow-card), 0 26px 60px -40px rgba(30, 123, 255, .55); }
 
+      .view > .grid + .grid { margin-top: 14px; }
+      .two { grid-template-columns: 2fr 1fr; }
+      .three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+      .users-grid { grid-template-columns: minmax(0, 1fr) 340px; }
+
+      /* ── KPI ── */
       .kpi .label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); font-weight: 600; letter-spacing: .3px; }
       .kpi .ico { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-2); flex: 0 0 auto; }
       .kpi .ico svg { width: 15px; height: 15px; }
@@ -127,17 +184,15 @@
       .active3 div b { display: block; font-size: 19px; font-variant-numeric: tabular-nums; }
       .active3 div span { font-size: 11.5px; color: var(--text-3); }
 
+      /* ── nagłówki sekcji ── */
       h2 { display: flex; align-items: center; gap: 9px; font-size: 14px; margin: 0 0 4px; font-weight: 600; letter-spacing: .1px; }
       h2::before {
         content: ""; width: 3px; height: 14px; border-radius: 99px; flex: 0 0 auto;
         background: linear-gradient(180deg, var(--accent-2), var(--accent)); box-shadow: 0 0 12px rgba(30, 123, 255, .6);
       }
       .card .hint { font-size: 12px; color: var(--text-3); margin-bottom: 12px; }
-      .two { grid-template-columns: 2fr 1fr; margin-top: 14px; }
-      .three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 14px; }
-      @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
 
-      /* wykresy */
+      /* ── wykresy ── */
       .chart { position: relative; }
       .chart svg { display: block; width: 100%; overflow: visible; }
       .axis text { fill: var(--text-3); font-size: 11px; font-family: Sora, sans-serif; }
@@ -148,7 +203,7 @@
       }
       .tip b { font-size: 14px; display: block; }
 
-      /* listy z paskami */
+      /* ── listy z paskami ── */
       .bars { display: flex; flex-direction: column; gap: 10px; }
       .bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 46px; gap: 10px; align-items: center; font-size: 12.5px; }
       .bar-row .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
@@ -160,7 +215,7 @@
       .bar-row .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
       .empty { color: var(--text-3); font-size: 12.5px; padding: 10px 0; }
 
-      /* podział planów */
+      /* ── podział planów ── */
       .stack {
         display: flex; height: 28px; border-radius: 9px; overflow: hidden; gap: 2px; margin: 8px 0 16px;
         background: #0a0f18; box-shadow: inset 0 0 0 1px var(--border);
@@ -182,9 +237,7 @@
       .counters span { font-size: 11.5px; color: var(--text-3); }
       .hidden { display: none !important; }
 
-      /* użytkownicy i aktywność */
-      .users-grid { grid-template-columns: minmax(0, 1fr) 340px; margin-top: 14px; }
-      @media (max-width: 1100px) { .users-grid { grid-template-columns: 1fr; } }
+      /* ── użytkownicy, tabele, aktywność ── */
       .scroll, .feed { scrollbar-width: thin; scrollbar-color: var(--border-2) transparent; }
       .users-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
       .search {
@@ -228,9 +281,28 @@
       .feed-row .what { color: var(--text-2); grid-column: 1; line-height: 1.45; min-width: 0; overflow-wrap: anywhere; }
       .feed-row time { color: var(--text-3); font-size: 11.5px; grid-row: 1; grid-column: 2; }
 
-      #app { animation: rise .4s cubic-bezier(.2, .7, .3, 1) both; }
       @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
       @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+      /* ── widoki ── */
+      .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+      .view-head h2 { font-size: 16px; margin: 0; }
+      .view-head .hint { margin: 4px 0 0; }
+
+      @media (max-width: 1080px) { .users-grid { grid-template-columns: 1fr; } }
+      @media (max-width: 980px) {
+        .shell { grid-template-columns: 1fr; }
+        .sidebar {
+          position: fixed; top: 0; left: 0; width: 264px; transform: translateX(-103%);
+          transition: transform .26s cubic-bezier(.3, .8, .3, 1); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .9);
+        }
+        .shell.side-open .sidebar { transform: none; }
+        .shell.side-open .scrim { display: block; }
+        .menu-btn { display: grid; }
+        .content { padding: 18px 16px 72px; }
+        .topbar { padding: 12px 16px; }
+        .two, .three, .users-grid { grid-template-columns: 1fr; }
+      }
     </style>
   </head>
   <body>
@@ -250,103 +322,156 @@
     </div>
 
     <!-- Panel -->
-    <div id="app" class="wrap hidden">
-      <header class="top">
-        <div>
-          <div class="brand"><img src="logo.png" alt="" /> <span>Lag<span class="grad">Kill</span></span> <span id="demo-badge" class="demo-badge hidden">PRZYKŁADOWE DANE</span></div>
-          <h1>Statystyki</h1>
-          <div class="dim" id="updated" style="font-size: 12.5px"></div>
-        </div>
-        <div class="actions">
-          <button class="btn" id="refresh">Odśwież</button>
-          <button class="btn" id="logout">Wyloguj</button>
-        </div>
-      </header>
+    <div id="app" class="shell hidden">
+      <div class="scrim"></div>
 
-      <div class="grid kpis" id="kpis"></div>
+      <aside class="sidebar">
+        <div class="brand"><img src="logo.png" alt="" /> <span>Lag<span class="grad">Kill</span></span></div>
+        <div class="side-label">Panel</div>
+        <nav class="nav">
+          <button class="nav-item is-active" data-view="overview">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h8V3H3zM13 21h8v-6h-8zM13 3v8h8V3zM3 21h8v-6H3z"/></svg>
+            <span>Przegląd</span>
+          </button>
+          <button class="nav-item" data-view="users">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17.5 11a3 3 0 1 0 0-6M21 19v-1a4 4 0 0 0-3-3.87"/></svg>
+            <span>Użytkownicy</span><span class="nav-badge" id="nav-count-users">—</span>
+          </button>
+          <button class="nav-item" data-view="referrals">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+            <span>Polecenia</span><span class="nav-badge" id="nav-count-ref">—</span>
+          </button>
+          <button class="nav-item" data-view="charts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3.5-4 3 2.5L20 7"/></svg>
+            <span>Analityka</span>
+          </button>
+          <button class="nav-item" data-view="tweaks">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+            <span>Tweaki i aplikacje</span>
+          </button>
+        </nav>
+        <div class="side-foot">
+          <button class="btn ghost" id="refresh">Odśwież</button>
+          <button class="btn ghost" id="logout">Wyloguj</button>
+          <div class="side-note">LagKill · panel statystyk</div>
+        </div>
+      </aside>
 
-      <div class="grid users-grid">
-        <div class="card">
-          <div class="users-head">
-            <div>
-              <h2>Użytkownicy</h2>
-              <div class="hint" id="users-hint">Każda instalacja z kontem Discord · ostatnio aktywni na górze</div>
+      <div class="main">
+        <header class="topbar">
+          <button class="menu-btn" id="menu-btn" aria-label="Pokaż menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div>
+            <h1 id="view-title">Przegląd</h1>
+            <div class="tb-sub"><span class="live"></span><span class="dim" id="updated"></span></div>
+          </div>
+          <div class="tb-actions">
+            <span id="demo-badge" class="demo-badge hidden">PRZYKŁADOWE DANE</span>
+          </div>
+        </header>
+
+        <div class="content">
+          <!-- Przegląd -->
+          <section class="view is-active" id="view-overview">
+            <div class="grid kpis" id="kpis"></div>
+            <div class="grid two">
+              <div class="card">
+                <h2>Instalacje dziennie</h2>
+                <div class="hint">Udane instalacje z LagKill Setup · 30 dni</div>
+                <div class="chart" id="chart-installs"></div>
+              </div>
+              <div class="card">
+                <h2>Aktywność</h2>
+                <div class="hint">Łącznie od początku</div>
+                <div class="counters" id="counters"></div>
+              </div>
             </div>
-            <input id="user-search" class="search" type="search" placeholder="Szukaj nicku lub ID…" />
-          </div>
-          <div class="table-wrap scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Użytkownik</th><th>Plan</th><th class="num">Uruchomienia</th><th class="num">Tweaki</th><th class="num">Gry</th>
-                  <th>Ostatnio</th><th>Pierwszy raz</th><th>System</th>
-                </tr>
-              </thead>
-              <tbody id="users"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card">
-          <h2>Ostatnia aktywność</h2>
-          <div class="hint">Na żywo · ostatnie 80 zdarzeń</div>
-          <div class="feed" id="recent"></div>
-        </div>
-      </div>
+          </section>
 
-      <div class="grid users-grid">
-        <div class="card">
-          <h2>Polecenia</h2>
-          <div class="hint" id="ref-hint">Kto kogo zaprosił i jakim kodem · +7 dni Premium za każde polecenie</div>
-          <div class="table-wrap scroll">
-            <table>
-              <thead>
-                <tr><th>Kiedy</th><th>Zaprosił</th><th>Kod</th><th>Zaproszony</th></tr>
-              </thead>
-              <tbody id="referrals"></tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card">
-          <h2>Najlepiej polecający</h2>
-          <div class="hint">Liczba zaproszonych · Premium z poleceń</div>
-          <div class="bars" id="top-referrers"></div>
-        </div>
-      </div>
+          <!-- Użytkownicy -->
+          <section class="view" id="view-users">
+            <div class="grid users-grid">
+              <div class="card">
+                <div class="users-head">
+                  <div>
+                    <h2>Użytkownicy</h2>
+                    <div class="hint" id="users-hint">Każda instalacja z kontem Discord · ostatnio aktywni na górze</div>
+                  </div>
+                  <input id="user-search" class="search" type="search" placeholder="Szukaj nicku lub ID…" />
+                </div>
+                <div class="table-wrap scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Użytkownik</th><th>Plan</th><th class="num">Uruchomienia</th><th class="num">Tweaki</th><th class="num">Gry</th>
+                        <th>Ostatnio</th><th>Pierwszy raz</th><th>System</th>
+                      </tr>
+                    </thead>
+                    <tbody id="users"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="card">
+                <h2>Ostatnia aktywność</h2>
+                <div class="hint">Na żywo · ostatnie 80 zdarzeń</div>
+                <div class="feed" id="recent"></div>
+              </div>
+            </div>
+          </section>
 
-      <div class="grid two">
-        <div class="card">
-          <h2>Aktywni użytkownicy dziennie</h2>
-          <div class="hint">Unikalne instalacje, które uruchomiły LagKill danego dnia · 30 dni</div>
-          <div class="chart" id="chart-active"></div>
-        </div>
-        <div class="card">
-          <h2>Plany użytkowników</h2>
-          <div class="hint">Stan aktywnych użytkowników z 30 dni</div>
-          <div id="plans"></div>
-        </div>
-      </div>
+          <!-- Polecenia -->
+          <section class="view" id="view-referrals">
+            <div class="grid users-grid">
+              <div class="card">
+                <h2>Polecenia</h2>
+                <div class="hint" id="ref-hint">Kto kogo zaprosił i jakim kodem · +7 dni Premium za każde polecenie</div>
+                <div class="table-wrap scroll">
+                  <table>
+                    <thead>
+                      <tr><th>Kiedy</th><th>Zaprosił</th><th>Kod</th><th>Zaproszony</th></tr>
+                    </thead>
+                    <tbody id="referrals"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="card">
+                <h2>Najlepiej polecający</h2>
+                <div class="hint">Liczba zaproszonych · Premium z poleceń</div>
+                <div class="bars" id="top-referrers"></div>
+              </div>
+            </div>
+          </section>
 
-      <div class="grid two">
-        <div class="card">
-          <h2>Instalacje dziennie</h2>
-          <div class="hint">Udane instalacje z LagKill Setup · 30 dni</div>
-          <div class="chart" id="chart-installs"></div>
-        </div>
-        <div class="card">
-          <h2>Aktywność</h2>
-          <div class="hint">Łącznie od początku</div>
-          <div class="counters" id="counters"></div>
-        </div>
-      </div>
+          <!-- Analityka -->
+          <section class="view" id="view-charts">
+            <div class="grid two">
+              <div class="card">
+                <h2>Aktywni użytkownicy dziennie</h2>
+                <div class="hint">Unikalne instalacje, które uruchomiły LagKill danego dnia · 30 dni</div>
+                <div class="chart" id="chart-active"></div>
+              </div>
+              <div class="card">
+                <h2>Plany użytkowników</h2>
+                <div class="hint">Stan aktywnych użytkowników z 30 dni</div>
+                <div id="plans"></div>
+              </div>
+            </div>
+          </section>
 
-      <div class="grid three">
-        <div class="card"><h2>Najczęściej włączane tweaki</h2><div class="hint">30 dni</div><div class="bars" id="top-tweaks"></div></div>
-        <div class="card"><h2>Instalowane aplikacje</h2><div class="hint">30 dni</div><div class="bars" id="top-apps"></div></div>
-        <div class="card">
-          <h2>Wersje i system</h2><div class="hint">Aktywni użytkownicy · 30 dni</div>
-          <div class="bars" id="versions"></div>
-          <div style="height: 14px"></div>
-          <div class="bars" id="windows"></div>
+          <!-- Tweaki i aplikacje -->
+          <section class="view" id="view-tweaks">
+            <div class="grid three">
+              <div class="card"><h2>Najczęściej włączane tweaki</h2><div class="hint">30 dni</div><div class="bars" id="top-tweaks"></div></div>
+              <div class="card"><h2>Instalowane aplikacje</h2><div class="hint">30 dni</div><div class="bars" id="top-apps"></div></div>
+              <div class="card">
+                <h2>Wersje i system</h2><div class="hint">Aktywni użytkownicy · 30 dni</div>
+                <div class="bars" id="versions"></div>
+                <div style="height: 14px"></div>
+                <div class="bars" id="windows"></div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>

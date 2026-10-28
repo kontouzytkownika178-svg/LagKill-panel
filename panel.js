@@ -64,6 +64,8 @@ function render(s) {
   const t = s.totals, a = s.active, p = s.plans;
   $("demo-badge").classList.toggle("hidden", !demo);
   $("updated").textContent = `Zaktualizowano ${new Date(s.generated_at).toLocaleString("pl-PL")} · odświeża się co minutę`;
+  $("nav-count-users").textContent = fmt(t.users);
+  $("nav-count-ref").textContent = fmt((s.referrals || []).length);
 
   $("kpis").innerHTML = `
     <div class="card kpi hero"><div class="label"><span class="ico">${ICON.installs}</span>Instalacje</div><div class="val">${fmt(t.installs)}</div><div class="sub">+ ${fmt(t.updates)} aktualizacji</div></div>
@@ -344,6 +346,26 @@ function demoData() {
     referral_codes: 41,
   };
 }
+
+/* ───────── nawigacja (widoki) ───────── */
+
+const VIEW_TITLES = { overview: "Przegląd", users: "Użytkownicy", referrals: "Polecenia", charts: "Analityka", tweaks: "Tweaki i aplikacje" };
+
+function showView(name) {
+  document.querySelectorAll(".nav-item").forEach((b) => b.classList.toggle("is-active", b.dataset.view === name));
+  document.querySelectorAll(".view").forEach((v) => v.classList.toggle("is-active", v.id === `view-${name}`));
+  $("view-title").textContent = VIEW_TITLES[name] || "Panel";
+  $("app").classList.remove("side-open");
+  // wykresy liczą szerokość karty, więc przerysowujemy je po pokazaniu widoku
+  if (lastStats) {
+    lineChart($("chart-active"), lastStats.daily.map((d) => ({ x: d.day, y: d.active })), "aktywnych");
+    barChart($("chart-installs"), lastStats.daily.map((d) => ({ x: d.day, y: d.installs })), "instalacji");
+  }
+}
+
+document.querySelectorAll(".nav-item").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
+$("menu-btn").addEventListener("click", () => $("app").classList.toggle("side-open"));
+document.querySelector(".scrim").addEventListener("click", () => $("app").classList.remove("side-open"));
 
 /* ───────── zdarzenia ───────── */
 
