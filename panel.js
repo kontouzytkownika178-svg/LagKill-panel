@@ -112,7 +112,9 @@ function render(s) {
   bars($("versions"), s.versions.map((x) => ({ name: `LagKill ${x.v}`, n: x.count })));
   bars($("windows"), s.windows.map((x) => ({ name: x.v, n: x.count })));
 
+  levels = s.levels || {};
   users(s.users || []);
+  presets(s.presets || []);
   recent(s.recent || []);
   referrals(s.referrals || [], s.top_referrers || [], s.referral_codes ?? 0);
 }
@@ -155,6 +157,10 @@ function users(list) {
           <b>${fmt(u.tweaks)}</b>
           <span>tweaków</span>
         </div>
+        <div class="row-stat" title="${esc(levels[u.install_id]?.gpu || "")}">
+          <b>${levels[u.install_id]?.score ?? "–"}</b>
+          <span>aktywnych</span>
+        </div>
         <div class="row-stat" style="width:120px;" title="${new Date(u.last_seen).toLocaleString("pl-PL")}">
           <b>${ago(u.last_seen)}</b>
           <span>ostatnio</span>
@@ -163,6 +169,52 @@ function users(list) {
     `;
   }).join("");
 }
+
+/* ───────── zestawy od graczy ───────── */
+
+let levels = {};
+
+function presets(list) {
+  $("nav-count-presets").textContent = fmt(list.filter((p) => !p.hidden).length);
+  $("presets-hint").textContent = `${fmt(list.length)} zestawów · ${fmt(list.reduce((a, p) => a + p.imports, 0))} importów`;
+  $("presets").innerHTML = list.length
+    ? list
+        .map(
+          (p) => `
+    <div class="glass-row" style="${p.hidden ? "opacity:.5" : ""}">
+      <div class="user-info">
+        <div class="user-meta">
+          <b>${esc(p.name)}${p.hidden ? " · ukryty" : ""}</b>
+          <span>od ${esc(p.author || "?")} · ${esc(p.author_id || "")}${p.game ? " · " + esc(p.game) : ""}</span>
+        </div>
+      </div>
+      <div class="row-stat"><code style="background:var(--accent-soft); color:var(--accent); padding:4px 8px; border-radius:6px; font-weight:700;">${esc(p.code)}</code></div>
+      <div class="row-stat"><b>${fmt(p.tweaks)}</b><span>tweaków</span></div>
+      <div class="row-stat"><b>${fmt(p.imports)}</b><span>importów</span></div>
+      <div class="row-stat" style="display:flex; gap:6px;">
+        <button class="btn-side" data-preset="${esc(p.code)}" data-act="${p.hidden ? "show" : "hide"}">${p.hidden ? "Pokaż" : "Ukryj"}</button>
+        <button class="btn-side" style="color:var(--danger)" data-preset="${esc(p.code)}" data-act="delete">Usuń</button>
+      </div>
+    </div>`,
+        )
+        .join("")
+    : `<div class="glass-row empty-row">Nikt jeszcze nie udostępnił zestawu</div>`;
+}
+
+// Ukrywanie / przywracanie / usuwanie zestawu (spam, obraźliwe nazwy)
+$("presets").addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-preset]");
+  if (!b || demo) return;
+  if (b.dataset.act === "delete" && !confirm(`Usunąć zestaw ${b.dataset.preset}? Kod przestanie działać.`)) return;
+  const r = await fetch(`${cfg.url}/rest/v1/rpc/lagkill_admin_preset`, {
+    method: "POST",
+    headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ password, code: b.dataset.preset, action: b.dataset.act }),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (res.error) alert(res.error === "locked" ? "Za dużo błędnych haseł — spróbuj za 15 minut." : res.error);
+  load();
+});
 
 /* ───────── polecenia ───────── */
 
@@ -186,8 +238,8 @@ function referrals(list, top, codes) {
     </div>
   `).join("") : `<div class="glass-row empty-row">Nikt jeszcze nie użył kodu polecenia</div>`;
 
-  const days = (u) => (u ? Math.max(0, Math.ceil((new Date(u) - Date.now()) / 86400000)) : 0);
-  bars($("top-referrers"), top.map((t) => ({ name: `${t.name || "?"} · ${t.code}${days(t.premium_until) ? ` · ${days(t.premium_until)} dni Premium` : ""}`, n: t.count })));
+  const until = (u) => (u && new Date(u) > Date.now() ? ` · Premium do ${new Date(u).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" })}` : "");
+  bars($("top-referrers"), top.map((t) => ({ name: `${t.name || "?"} · ${t.code}${until(t.premium_until)}`, n: t.count })));
 }
 
 /* ───────── aktywność ───────── */
@@ -390,7 +442,7 @@ function showView(name) {
   document.querySelectorAll(".nav-item").forEach(i => i.classList.toggle("active", i.dataset.view === name));
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === `view-${name}`));
   $("view-title").textContent = {
-    overview: "Przegląd", users: "Użytkownicy", referrals: "Polecenia", charts: "Analityka", tweaks: "Tweaki & Apps", admin: "Zarządzanie"
+    overview: "Przegląd", users: "Użytkownicy", referrals: "Polecenia", presets: "Zestawy", charts: "Analityka", tweaks: "Tweaki & Apps", admin: "Zarządzanie"
   }[name];
   
   if (lastStats) {
