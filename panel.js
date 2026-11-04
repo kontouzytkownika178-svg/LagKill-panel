@@ -101,7 +101,7 @@ function render(s) {
     ["Polecenia", (s.referrals || []).length, "users"],
     ["Kody polecające", s.referral_codes ?? 0, "link"],
   ].map(([l, v, ico]) => `
-    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.03); border-radius:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; background:rgba(255,255,255,0.03); border-radius:6px;">
       <span style="font-size:13px; color:var(--text-muted);">${l}</span>
       <b style="font-size:16px;">${fmt(v)}</b>
     </div>
@@ -290,8 +290,8 @@ function bars(el, items) {
         <span style="color:var(--text-muted);">${esc(i.name)}</span>
         <b>${fmt(i.n)}</b>
       </div>
-      <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden;">
-        <div style="height:100%; width:${(i.n / max) * 100}%; background:var(--grad); border-radius:10px; box-shadow:0 0 10px var(--accent-glow);"></div>
+      <div style="height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden;">
+        <div style="height:100%; width:${(i.n / max) * 100}%; background:var(--accent); border-radius:2px;"></div>
       </div>
     </div>
   `).join("");
@@ -299,10 +299,10 @@ function bars(el, items) {
 
 function plans(p) {
   const parts = [
-    { k: "Premium", v: p.premium, c: "#3b82f6" },
-    { k: "Follower", v: p.follow, c: "#93c5fd" },
-    { k: "Owner", v: p.owner, c: "#ffffff" },
-    { k: "Free", v: p.locked, c: "#64748b" },
+    { k: "Premium", v: p.premium, c: "#ffd338" },
+    { k: "Follower", v: p.follow, c: "#b39a3e" },
+    { k: "Owner", v: p.owner, c: "#ececec" },
+    { k: "Free", v: p.locked, c: "#4a4c51" },
   ];
   const total = parts.reduce((s, x) => s + x.v, 0);
   $("plans").innerHTML = `
@@ -363,7 +363,7 @@ function lineChart(el, data, unit) {
       </linearGradient>
     </defs>
     <path d="M${c.x(0)},${base} L${pts} L${c.x(data.length-1)},${base} Z" fill="url(#grad-${el.id})"/>
-    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
   `;
 }
 
