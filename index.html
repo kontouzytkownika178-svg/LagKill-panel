@@ -63,8 +63,6 @@
       .btn-primary:hover { background: var(--accent-hover); }
 
       .err-msg { color: var(--danger); font-size: 13px; margin-top: 12px; min-height: 18px; }
-      .demo-link { display: inline-block; margin-top: 14px; color: var(--text-muted); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
-      .demo-link:hover { color: var(--text); }
 
       /* ── Główny układ ── */
       .layout { display: flex; min-height: 100vh; }
@@ -168,7 +166,6 @@
       .muted { color: var(--text-muted); }
       .side-note { padding: 8px 10px 0; font-size: 11.5px; color: var(--text-dim); }
       .tb-actions { display: flex; align-items: center; gap: 10px; }
-      .demo-badge { font-size: 12px; font-weight: 600; color: var(--on-accent); background: var(--accent); padding: 3px 8px; border-radius: 4px; }
       .grid { display: grid; gap: 12px; }
       .grid.three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
       .grid.three h2 { font-size: 15px; margin: 0 0 12px; }
@@ -176,6 +173,34 @@
       .empty-row { justify-content: center; color: var(--text-dim); }
       .admin-msg { margin-top: 12px; font-size: 13px; min-height: 18px; }
       .admin-msg.err { color: var(--danger); }
+      /* Szczegóły użytkownika: okno po kliknięciu wiersza na liście */
+      .glass-row.clickable { cursor: pointer; }
+      .user-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px; overflow-y: auto; }
+      .user-modal-box { position: relative; width: min(860px, 100%); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 24px; }
+      .ud-close { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; justify-content: center; padding: 0; }
+      .ud-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; padding-right: 40px; }
+      .ud-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .ud-box { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; }
+      .ud-box span { font-size: 12px; color: var(--text-muted); }
+      .ud-box b { font-family: var(--mono); font-size: 14px; }
+      .user-modal h3 { font-size: 13.5px; font-weight: 600; margin: 20px 0 8px; }
+      .ud-chart { display: flex; align-items: flex-end; gap: 3px; height: 60px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px; }
+      .ud-chart > div { flex: 1; min-height: 2px; background: var(--accent); border-radius: 2px; opacity: .85; }
+      .ud-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      .ud-list { display: flex; flex-direction: column; }
+      .ud-line { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+      .ud-line:last-child { border-bottom: none; }
+      .ud-line span { color: var(--text-muted); min-width: 0; }
+      .ud-line span i { color: var(--text); font-style: normal; }
+      .ud-line b { font-weight: 500; white-space: nowrap; font-family: var(--mono); font-size: 12.5px; }
+      .ud-line code { font-family: var(--mono); color: var(--text); }
+      .ud-empty { color: var(--text-dim); font-size: 13px; padding: 8px 0; }
+      .ud-grant { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+      .ud-grant input { width: 80px; height: 36px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--text); padding: 0 10px; font-family: var(--mono); }
+      .ud-grant span { color: var(--text-muted); font-size: 12.5px; }
+      .ud-grant .btn-primary { width: auto; height: 36px; padding: 0 14px; }
+      .ud-grant .btn-side { height: 36px; border: 1px solid var(--line); }
+      @media (max-width: 760px) { .ud-grid { grid-template-columns: 1fr 1fr; } .ud-cols { grid-template-columns: 1fr; } }
       #menu-toggle { display: none; margin-right: 12px; padding: 8px; background: transparent; border: 1px solid var(--line); border-radius: var(--radius-sm); }
       .menu-shade { display: none; }
 
@@ -219,7 +244,6 @@
           <button class="btn-primary" type="submit">Zaloguj</button>
         </form>
         <div class="err-msg" id="err"></div>
-        <button class="demo-link" id="demo">Tryb demonstracyjny</button>
       </div>
     </div>
 
@@ -298,7 +322,6 @@
             <p><span class="status-dot"></span> System aktywny · <span id="updated">ładowanie...</span></p>
           </div>
           <div class="tb-actions">
-            <span id="demo-badge" class="demo-badge hidden">TRYB DEMO</span>
           </div>
         </header>
 
@@ -519,6 +542,13 @@
           </section>
         </div>
       </main>
+    </div>
+
+    <div class="user-modal hidden" id="user-modal">
+      <div class="user-modal-box" role="dialog" aria-modal="true">
+        <button class="btn-side ud-close" data-close aria-label="Zamknij">✕</button>
+        <div id="user-modal-body"></div>
+      </div>
     </div>
 
     <script src="config.js"></script>

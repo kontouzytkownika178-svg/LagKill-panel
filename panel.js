@@ -6,11 +6,9 @@ const fmt = (n) => (n ?? 0).toLocaleString("pl-PL");
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 let password = sessionStorage.getItem("lk-panel-pass");
-let demo = false;
 let timer = null;
 
 async function fetchStats() {
-  if (demo) return demoData();
   if (!cfg.url || !cfg.key) throw new Error("Brak konfiguracji Supabase");
   const r = await fetch(`${cfg.url}/rest/v1/rpc/lagkill_panel`, {
     method: "POST",
@@ -57,7 +55,6 @@ window.addEventListener("resize", () => lastStats && render(lastStats));
 function render(s) {
   lastStats = s;
   const t = s.totals, a = s.active, p = s.plans;
-  $("demo-badge").classList.toggle("hidden", !demo);
   $("updated").textContent = new Date(s.generated_at).toLocaleString("pl-PL");
   $("nav-count-users").textContent = fmt(t.users);
   $("nav-count-ref").textContent = fmt((s.referrals || []).length);
@@ -138,7 +135,7 @@ function users(list) {
     const initials = esc((u.discord_name || u.discord_user || "?").slice(0, 2).toUpperCase());
     
     return `
-      <div class="glass-row">
+      <div class="glass-row clickable" data-install="${esc(u.install_id)}" title="Pokaż szczegóły">
         <div class="user-info">
           <div class="user-avatar">${initials}</div>
           <div class="user-meta">
@@ -204,7 +201,7 @@ function presets(list) {
 // Ukrywanie / przywracanie / usuwanie zestawu (spam, obraźliwe nazwy)
 $("presets").addEventListener("click", async (e) => {
   const b = e.target.closest("button[data-preset]");
-  if (!b || demo) return;
+  if (!b) return;
   if (b.dataset.act === "delete" && !confirm(`Usunąć zestaw ${b.dataset.preset}? Kod przestanie działać.`)) return;
   const r = await fetch(`${cfg.url}/rest/v1/rpc/lagkill_admin_preset`, {
     method: "POST",
@@ -399,10 +396,6 @@ $("admin-code-form").addEventListener("submit", async (e) => {
     msg.textContent = CODE_ERR.bad_format;
     return;
   }
-  if (demo) {
-    msg.textContent = "Tryb demonstracyjny — kod nie został zapisany.";
-    return;
-  }
 
   const btn = e.target.querySelector("button");
   const oldTxt = btn.textContent;
@@ -443,6 +436,8 @@ const PREM_ERR = {
   bad_count: "Od 1 do 500 kodów naraz.",
   bad_days: "Dni: od 1 do 3650 albo puste (na zawsze).",
   no_title: "Wpisz tytuł.",
+  no_discord: "Ten użytkownik nie logował się przez Discord.",
+  no_device: "Brak powiązanego urządzenia — użytkownik musi uruchomić aplikację po zalogowaniu przez Discord.",
   bad_link: "Link musi zaczynać się od https://",
 };
 
@@ -462,10 +457,6 @@ const daysLabel = (d) => (d == null ? "na zawsze" : `${d} dni`);
 
 async function loadPremium() {
   const list = $("prem-list");
-  if (demo) {
-    list.innerHTML = `<div class="glass-row empty-row">Tryb demonstracyjny — brak kodów</div>`;
-    return;
-  }
   try {
     const p = await premRpc("lagkill_admin_premium", {});
     $("prem-trials").textContent = `Okres próbny: ${fmt(p.trials)} (7 dni: ${fmt(p.trials_7d)})`;
@@ -491,7 +482,6 @@ $("prem-form").addEventListener("submit", async (e) => {
   const msg = $("prem-msg");
   msg.className = "admin-msg";
   msg.textContent = "";
-  if (demo) return (msg.textContent = "Tryb demonstracyjny — kody nie zostały zapisane.");
   const days = $("prem-days").value.trim();
   try {
     const res = await premRpc("lagkill_admin_premium_create", {
@@ -523,13 +513,202 @@ $("prem-list").addEventListener("click", async (e) => {
   }
 });
 
+/* ───────── szczegóły użytkownika (kliknięcie na liście) ───────── */
+
+/** Czytelne nazwy zdarzeń z aplikacji (src/lib/telemetry.ts). */
+const EVENT_LABEL = {
+  first_run: "Pierwsze uruchomienie", app_open: "Uruchomienie", heartbeat: "Status konta", discord_login: "Logowanie Discord",
+  follow_unlock: "Odblokowanie za obserwację", tweak_on: "Włączył tweak", tweak_off: "Wyłączył tweak", quick_boost: "Szybki boost",
+  app_install: "Instalacja aplikacji", backup_created: "Kopia zapasowa", ram_clean: "Czyszczenie RAM", game_launch: "Uruchomił grę",
+  deep_uninstall: "Głęboka deinstalacja", game_profile: "Ustawienia pod grę", preset_create: "Utworzył zestaw", preset_import: "Zaimportował zestaw",
+  crosshair_on: "Włączył celownik", cloud_save: "Kopia w chmurze", cloud_restore: "Przywrócił z chmury", driver_update: "Aktualizacja sterownika",
+  lag_scan: "Skaner „Czemu mi laguje?”", game_ping: "Ping do serwerów gier", bufferbloat: "Test bufferbloat", bench: "Raport przed i po",
+  ram_auto: "Auto-czyszczenie RAM", overlay_on: "Włączył overlay", startup_toggle: "Zmienił autostart", stretched_res: "Rozciągnięta rozdzielczość",
+  premium_code: "Użył kodu Premium", premium_trial: "Okres próbny Premium", premium_revert: "Koniec Premium (cofnięto tweaki)",
+  announcement_click: "Kliknął ogłoszenie", setup_install: "Instalator: instalacja", setup_update: "Instalator: aktualizacja",
+};
+
+const dt = (s) => (s ? new Date(s).toLocaleString("pl-PL", { dateStyle: "short", timeStyle: "short" }) : "–");
+const yesNo = (v) => (v ? "tak" : "nie");
+
+/** Problemy ze skanera (id z src/pages/Scan.tsx). */
+const SCAN_LABEL = {
+  hz: "monitor na niskim Hz", xmp: "XMP wyłączone", chan: "RAM jednokanałowo", bat: "na baterii", plan: "plan zasilania",
+  syshdd: "Windows na HDD", hdd: "gry na HDD", space: "mało miejsca", wu: "Windows Update w tle", od: "OneDrive w tle",
+  cpu: "CPU zajęty w tle", reboot: "czeka na restart", temp: "gorące GPU", tweaks: "wyłączone tweaki",
+};
+const scanIssues = (ids) => (Array.isArray(ids) && ids.length ? ids.map((i) => SCAN_LABEL[i] || i).join(", ") : "bez problemów");
+const REGION = { fra: "Frankfurt", sto: "Sztokholm", par: "Paryż", lon: "Londyn", dub: "Dublin", mil: "Mediolan" };
+let currentUser = null;
+const tweakName = (id) => TWEAK_NAMES[id] || id;
+
+/** Krótki opis szczegółów zdarzenia (np. nazwa tweaka, gry, kodu). */
+function eventDetail(e) {
+  const p = e.props || {};
+  if (p.id && (e.event === "tweak_on" || e.event === "tweak_off")) return tweakName(p.id);
+  if (e.event === "game_launch" && p.name) return p.name;
+  if (e.event === "startup_toggle" && p.name) return `${p.name} → ${p.on ? "wł." : "wył."}`;
+  if (e.event === "stretched_res" && p.res) return p.res;
+  if (e.event === "quick_boost") return `${p.ok ?? 0} tweaków`;
+  if (e.event === "ram_clean" && p.freedMb != null) return `${fmt(p.freedMb)} MB`;
+  if (e.event === "heartbeat") return p.owner ? "Owner" : p.premium ? "Premium" : p.follow ? "Follower" : "Free";
+  return "";
+}
+
+function userModal(d) {
+  const name = d.discord?.name || d.discord?.user || "Niezalogowany";
+  const plan = d.plan?.owner ? "owner" : d.plan?.premium ? "premium" : d.plan?.follow ? "follow" : "locked";
+  const until = d.referral?.premium_until;
+  const max = Math.max(1, ...(d.daily || []).map((x) => x.n));
+  const box = (k, v) => `<div class="ud-box"><span>${k}</span><b>${v}</b></div>`;
+  const list = (rows, empty) => (rows.length ? rows.join("") : `<div class="ud-empty">${empty}</div>`);
+  // Sprzęt i ustawienia przychodzą w ostatnim heartbeacie (src/lib/useProgress.ts, od 1.1.2)
+  const hw = d.plan && (d.plan.cpu || d.plan.gpu) ? d.plan : null;
+  const app = d.plan?.app ?? null;
+  const tools = d.tools || {};
+  currentUser = d.install_id;
+
+  $("user-modal-body").innerHTML = `
+    <div class="ud-head">
+      <div class="user-avatar" style="width: 44px; height: 44px; font-size: 15px;">${esc(name.slice(0, 2).toUpperCase())}</div>
+      <div class="user-meta">
+        <b style="font-size: 17px;">${esc(name)} <span class="pill ${plan}" style="margin-left: 6px; vertical-align: 2px;">${PLAN[plan]}</span></b>
+        <span>${d.discord ? `@${esc(d.discord.user || "")} · ID ${esc(d.discord.id)}` : "Bez konta Discord"} · instalacja ${esc(String(d.install_id).slice(0, 8))}</span>
+      </div>
+    </div>
+
+    <div class="ud-grid">
+      ${box("Pierwsze uruchomienie", dt(d.first_seen))}
+      ${box("Ostatnio", dt(d.last_seen))}
+      ${box("Uruchomień", fmt(d.launches))}
+      ${box("Aktywnych dni", fmt(d.active_days))}
+      ${box("Wersja", esc(d.app_version || "–"))}
+      ${box("Windows (build)", esc(d.os_build || "–"))}
+    </div>
+
+    <h3>Aktywność — ostatnie 30 dni</h3>
+    <div class="ud-chart">${(d.daily || []).map((x) => `<div title="${x.day}: ${x.n}" style="height: ${Math.round((x.n / max) * 100)}%"></div>`).join("")}</div>
+
+    <div class="ud-cols">
+      <div>
+        <h3>Sprzęt</h3>
+        <div class="ud-list">
+          ${hw ? `
+          <div class="ud-line"><span>Procesor</span><b>${esc(hw.cpu || "–")}</b></div>
+          <div class="ud-line"><span>Karta graficzna</span><b>${esc(hw.gpu || "–")}</b></div>
+          <div class="ud-line"><span>RAM</span><b>${esc(hw.ram || "–")}</b></div>
+          <div class="ud-line"><span>Monitor</span><b>${esc((hw.screen || "–").replace("x", "×").replace("@", " · ") + (hw.screen ? " Hz" : ""))}</b></div>
+          <div class="ud-line"><span>Włączonych tweaków</span><b>${fmt(hw.score ?? 0)}</b></div>` : `<div class="ud-empty">Brak — wysyłane od wersji 1.1.2</div>`}
+        </div>
+      </div>
+      <div>
+        <h3>Ustawienia aplikacji</h3>
+        <div class="ud-list">
+          ${app ? `
+          <div class="ud-line"><span>Język</span><b>${app.lang === "pl" ? "polski" : "angielski"}</b></div>
+          <div class="ud-line"><span>Zamykanie do traya</span><b>${yesNo(app.tray)}</b></div>
+          <div class="ud-line"><span>Smart Game Boost</span><b>${yesNo(app.gameBoost)}</b></div>
+          <div class="ud-line"><span>Auto-czyszczenie RAM</span><b>${app.autoRam ? `tak (poniżej ${fmt(app.autoRam)} MB)` : "nie"}</b></div>
+          <div class="ud-line"><span>Overlay pokazuje</span><b>${esc(app.overlay || "nic")}</b></div>
+          <div class="ud-line"><span>Gier z własną rozdzielczością</span><b>${fmt(app.gameRes ?? 0)}</b></div>` : `<div class="ud-empty">Brak — wysyłane od wersji 1.1.2</div>`}
+        </div>
+      </div>
+    </div>
+
+    <h3>Wyniki narzędzi</h3>
+    <div class="ud-list">
+      <div class="ud-line"><span>Skaner „Czemu mi laguje?”</span><b>${tools.scan ? `${scanIssues(tools.scan.issues)} · ${dt(tools.scan.at)}` : "nie używał"}</b></div>
+      <div class="ud-line"><span>Test bufferbloat</span><b>${tools.bufferbloat ? `ocena ${esc(tools.bufferbloat.grade || "?")} · ${fmt(tools.bufferbloat.mbps)} Mb/s · ${dt(tools.bufferbloat.at)}` : "nie używał"}</b></div>
+      <div class="ud-line"><span>Najlepszy ping do serwerów</span><b>${tools.ping?.best ? `${esc(REGION[tools.ping.best] || tools.ping.best)} · ${fmt(tools.ping.ms)} ms` : "nie używał"}</b></div>
+      <div class="ud-line"><span>Raport przed i po</span><b>${tools.bench ? `lepiej w ${fmt(tools.bench.better)} wskaźnikach · ${dt(tools.bench.at)}` : "nie używał"}</b></div>
+      <div class="ud-line"><span>Rozciągnięta rozdzielczość</span><b>${tools.res?.res ? `${esc(tools.res.res.replace("x", "×"))}${tools.res.auto ? " (pod grę)" : ""} · ${dt(tools.res.at)}` : "nie używał"}</b></div>
+      <div class="ud-line"><span>Zmian w autostarcie / czyszczeń RAM</span><b>${fmt(tools.startup ?? 0)} / ${fmt(tools.ram ?? 0)}</b></div>
+    </div>
+
+    <div class="ud-cols">
+      <div>
+        <h3>Premium</h3>
+        ${d.can_grant ? `
+        <div class="ud-grant">
+          <input type="number" id="ud-days" min="1" max="3650" value="30" title="Puste = na zawsze" />
+          <span>dni (puste = na zawsze)</span>
+          <button class="btn-primary" data-grant>Daj Premium</button>
+          <button class="btn-side" data-revoke>Zabierz Premium od admina</button>
+        </div>
+        <div class="admin-msg" id="ud-grant-msg"></div>` : `<div class="ud-empty">Dać Premium można dopiero, gdy użytkownik zaloguje się przez Discord w aplikacji.</div>`}
+        <div class="ud-list">
+          <div class="ud-line"><span>Premium teraz (ostatni status z aplikacji)</span><b>${d.plan?.owner ? "Owner" : d.plan?.premium ? "Tak" : "Nie"}</b></div>
+          <div class="ud-line"><span>Premium (kody / próbne / polecenia) do</span><b>${until && new Date(until) > new Date() ? dt(until) : "brak"}</b></div>
+          <div class="ud-line"><span>3 dni próbne</span><b>${d.trial ? dt(d.trial.started_at) : "nie użył"}</b></div>
+          ${(d.codes || []).map((c) => `<div class="ud-line"><span>Kod <code>${esc(c.code)}</code>${c.note ? ` · ${esc(c.note)}` : ""}</span><b>${c.days ? `${c.days} dni` : "na zawsze"} · ${dt(c.created_at)}</b></div>`).join("")}
+        </div>
+        <h3>Polecenia</h3>
+        <div class="ud-list">
+          <div class="ud-line"><span>Jego kod</span><b>${d.referral?.code ? `<code>${esc(d.referral.code)}</code>` : "–"}</b></div>
+          <div class="ud-line"><span>Polecił osób</span><b>${fmt(d.referral?.referrals ?? 0)}</b></div>
+          <div class="ud-line"><span>Polecony przez</span><b>${d.referral?.referred_by ? `${esc(d.referral.referred_by.name || "?")} (<code>${esc(d.referral.referred_by.code)}</code>)` : "–"}</b></div>
+        </div>
+      </div>
+      <div>
+        <h3>Najczęściej włączane tweaki</h3>
+        <div class="ud-list">${list((d.top_tweaks || []).map((t) => `<div class="ud-line"><span>${esc(tweakName(t.id))}</span><b>${fmt(t.n)}×</b></div>`), "Brak")}</div>
+        <h3>Gry uruchamiane z LagKill</h3>
+        <div class="ud-list">${list((d.games || []).map((g) => `<div class="ud-line"><span>${esc(g.name)}</span><b>${fmt(g.n)}× · ${dt(g.last)}</b></div>`), "Brak")}</div>
+      </div>
+    </div>
+
+    <h3>Ostatnie akcje</h3>
+    <div class="ud-list">${list((d.recent || []).map((e) => `<div class="ud-line"><span>${esc(EVENT_LABEL[e.event] || e.event)}${eventDetail(e) ? ` <i>${esc(eventDetail(e))}</i>` : ""}</span><b>${dt(e.created_at)}</b></div>`), "Brak")}</div>
+  `;
+}
+
+async function openUser(install) {
+  $("user-modal").classList.remove("hidden");
+  $("user-modal-body").innerHTML = `<div class="ud-empty">Wczytywanie…</div>`;
+  try {
+    const d = await premRpc("lagkill_admin_user", { install });
+    userModal(d);
+  } catch (err) {
+    $("user-modal-body").innerHTML = `<div class="ud-empty">${esc(err.message === "not_found" ? "Brak danych o tym użytkowniku" : err.message)}</div>`;
+  }
+}
+
+$("users").addEventListener("click", (e) => {
+  const row = e.target.closest("[data-install]");
+  if (row) openUser(row.dataset.install);
+});
+$("user-modal").addEventListener("click", async (e) => {
+  if (e.target.id === "user-modal" || e.target.closest("[data-close]")) return $("user-modal").classList.add("hidden");
+  const grant = e.target.closest("[data-grant]");
+  const revoke = e.target.closest("[data-revoke]");
+  if (!(grant || revoke) || !currentUser) return;
+  const msg = $("ud-grant-msg");
+  const daysTxt = $("ud-days").value.trim();
+  const days = daysTxt ? Number(daysTxt) : null;
+  if (grant && !confirm(`Dać Premium ${days ? `na ${days} dni` : "na zawsze"}?`)) return;
+  if (revoke && !confirm("Zabrać Premium dane z panelu? Kupione kody i rola na Discordzie zostają.")) return;
+  try {
+    const r = grant
+      ? await premRpc("lagkill_admin_grant_premium", { install: currentUser, days })
+      : await premRpc("lagkill_admin_revoke_premium", { install: currentUser });
+    await openUser(currentUser);
+    const m = $("ud-grant-msg");
+    if (m) m.textContent = grant
+      ? `Dano Premium — aktywne do ${dt(r.premium_until)}. Użytkownik zobaczy je w ciągu 30 minut.`
+      : `Zabrano ${fmt(r.removed)} ${r.removed === 1 ? "przydział" : "przydziałów"} Premium od admina.`;
+  } catch (err) {
+    msg.className = "admin-msg err";
+    msg.textContent = err.message;
+  }
+});
+document.addEventListener("keydown", (e) => e.key === "Escape" && $("user-modal").classList.add("hidden"));
+
 /* ───────── admin: reset statystyk ───────── */
 
 $("reset-stats").addEventListener("click", async () => {
   const msg = $("reset-msg");
   msg.className = "admin-msg";
   msg.textContent = "";
-  if (demo) return (msg.textContent = "Tryb demonstracyjny — nic nie zostało wyzerowane.");
   if (!confirm("Wyzerować statystyki? Liczniki zaczną od zera, a stare dane trafią do archiwum.")) return;
   try {
     const res = await premRpc("lagkill_admin_reset_stats", {});
@@ -547,10 +726,6 @@ const ANN_KIND = { promo: "Promocja", info: "Informacja", warn: "Ważne" };
 
 async function loadAnnouncements() {
   const list = $("ann-list");
-  if (demo) {
-    list.innerHTML = `<div class="glass-row empty-row">Tryb demonstracyjny — brak ogłoszeń</div>`;
-    return;
-  }
   try {
     const { items } = await premRpc("lagkill_admin_announcements", {});
     list.innerHTML = items.length
@@ -574,7 +749,6 @@ $("ann-form").addEventListener("submit", async (e) => {
   const msg = $("ann-msg");
   msg.className = "admin-msg";
   msg.textContent = "";
-  if (demo) return (msg.textContent = "Tryb demonstracyjny — ogłoszenie nie zostało opublikowane.");
   const title = $("ann-title").value.trim();
   const link = $("ann-link").value.trim();
   if (!title) return ((msg.className = "admin-msg err"), (msg.textContent = "Wpisz tytuł."));
@@ -647,37 +821,15 @@ function ago(iso) {
   return new Date(iso).toLocaleDateString("pl-PL", {day:'numeric', month:'short'});
 }
 
-function demoData() {
-  const days = [...Array(30)].map((_, i) => ({ day: `2024-01-${i+1}`, active: 40 + Math.random()*20, installs: Math.random()*10 }));
-  return {
-    generated_at: new Date().toISOString(),
-    totals: { installs: 1284, updates: 312, users: 1097, launches: 9842, tweaks_enabled: 18430, apps_installed: 2210, ram_cleans: 3105, games_launched: 4021 },
-    active: { today: 214, d30: 1003 },
-    plans: { premium: 87, follow: 596, owner: 2, locked: 318 },
-    daily: days,
-    top_tweaks: [{id:"net-nagle", count:812}, {id:"gpu-gamedvr", count:755}],
-    top_apps: [{id:"Discord", count:402}],
-    versions: [{v:"1.0.0", count:1003}],
-    windows: [{v:"Windows 11", count:642}, {v:"Windows 10", count:361}],
-    users: [{discord_name:"Kacper", plan:"premium", launches:142, tweaks:61, last_seen:new Date().toISOString(), install_id:"uuid-1"}],
-    recent: [{discord_name:"Kacper", event:"tweak_on", props:{id:"net-nagle"}, created_at:new Date().toISOString()}],
-    referrals: [{referrer_name:"Kacper", referred_name:"Ola", code:"PROMO1", created_at:new Date().toISOString()}],
-    top_referrers: [{name:"Kacper", count:5}],
-    referral_codes: 42
-  };
-}
-
 /* ───────── init ───────── */
 
 $("login-form").addEventListener("submit", e => {
   e.preventDefault();
   password = $("pass").value;
-  demo = false;
   sessionStorage.setItem("lk-panel-pass", password);
   load().then(() => timer = setInterval(load, 60000));
 });
 
-$("demo").addEventListener("click", () => { demo = true; load(); });
 $("refresh").addEventListener("click", load);
 $("logout").addEventListener("click", () => { sessionStorage.removeItem("lk-panel-pass"); location.reload(); });
 
