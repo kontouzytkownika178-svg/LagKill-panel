@@ -436,6 +436,179 @@ $("admin-code-form").addEventListener("submit", async (e) => {
   }
 });
 
+/* ───────── admin: kody Premium ───────── */
+
+const PREM_ERR = {
+  ...CODE_ERR,
+  bad_count: "Od 1 do 500 kodów naraz.",
+  bad_days: "Dni: od 1 do 3650 albo puste (na zawsze).",
+  no_title: "Wpisz tytuł.",
+  bad_link: "Link musi zaczynać się od https://",
+};
+
+async function premRpc(fn, body) {
+  const r = await fetch(`${cfg.url}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ password, ...body }),
+  });
+  const res = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(res.message || `Błąd ${r.status}`);
+  if (res.error) throw new Error(PREM_ERR[res.error] || res.error);
+  return res;
+}
+
+const daysLabel = (d) => (d == null ? "na zawsze" : `${d} dni`);
+
+async function loadPremium() {
+  const list = $("prem-list");
+  if (demo) {
+    list.innerHTML = `<div class="glass-row empty-row">Tryb demonstracyjny — brak kodów</div>`;
+    return;
+  }
+  try {
+    const p = await premRpc("lagkill_admin_premium", {});
+    $("prem-trials").textContent = `Okres próbny: ${fmt(p.trials)} (7 dni: ${fmt(p.trials_7d)})`;
+    list.innerHTML = p.codes.length
+      ? p.codes
+          .map(
+            (c) => `<div class="glass-row">
+              <div class="user-info"><div class="user-meta"><b style="font-family: var(--mono);">${esc(c.code)}</b>
+                <span>${daysLabel(c.days)}${c.note ? ` · ${esc(c.note)}` : ""} · ${new Date(c.created_at).toLocaleDateString("pl-PL")}</span></div></div>
+              <div class="row-stat"><b>${fmt(c.uses)} / ${fmt(c.max_uses)}</b><span>użyć</span></div>
+              <button class="btn-side" data-prem-del="${esc(c.code)}" style="margin-left: 12px;">Usuń</button>
+            </div>`,
+          )
+          .join("")
+      : `<div class="glass-row empty-row">Brak kodów — utwórz pierwszy powyżej</div>`;
+  } catch (err) {
+    list.innerHTML = `<div class="glass-row empty-row">${esc(err.message)}</div>`;
+  }
+}
+
+$("prem-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = $("prem-msg");
+  msg.className = "admin-msg";
+  msg.textContent = "";
+  if (demo) return (msg.textContent = "Tryb demonstracyjny — kody nie zostały zapisane.");
+  const days = $("prem-days").value.trim();
+  try {
+    const res = await premRpc("lagkill_admin_premium_create", {
+      count: Number($("prem-count").value) || 1,
+      days: days ? Number(days) : null,
+      max_uses: Number($("prem-uses").value) || 1,
+      note: $("prem-note").value.trim() || null,
+    });
+    $("prem-new").classList.remove("hidden");
+    $("prem-new-list").value = res.codes.join("\n");
+    msg.textContent = `Utworzono ${res.codes.length} ${res.codes.length === 1 ? "kod" : "kodów"} (${daysLabel(days ? Number(days) : null)}).`;
+    loadPremium();
+  } catch (err) {
+    msg.className = "admin-msg err";
+    msg.textContent = err.message;
+  }
+});
+
+$("prem-copy").addEventListener("click", () => navigator.clipboard.writeText($("prem-new-list").value));
+
+$("prem-list").addEventListener("click", async (e) => {
+  const code = e.target.dataset?.premDel;
+  if (!code || !confirm(`Usunąć kod ${code}? Osoby, które go użyły, stracą Premium z tego kodu.`)) return;
+  try {
+    await premRpc("lagkill_admin_premium_delete", { code });
+    loadPremium();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+/* ───────── admin: reset statystyk ───────── */
+
+$("reset-stats").addEventListener("click", async () => {
+  const msg = $("reset-msg");
+  msg.className = "admin-msg";
+  msg.textContent = "";
+  if (demo) return (msg.textContent = "Tryb demonstracyjny — nic nie zostało wyzerowane.");
+  if (!confirm("Wyzerować statystyki? Liczniki zaczną od zera, a stare dane trafią do archiwum.")) return;
+  try {
+    const res = await premRpc("lagkill_admin_reset_stats", {});
+    msg.textContent = `Wyzerowano — ${fmt(res.archived)} zdarzeń przeniesiono do archiwum.`;
+    load();
+  } catch (err) {
+    msg.className = "admin-msg err";
+    msg.textContent = err.message;
+  }
+});
+
+/* ───────── admin: ogłoszenia ───────── */
+
+const ANN_KIND = { promo: "Promocja", info: "Informacja", warn: "Ważne" };
+
+async function loadAnnouncements() {
+  const list = $("ann-list");
+  if (demo) {
+    list.innerHTML = `<div class="glass-row empty-row">Tryb demonstracyjny — brak ogłoszeń</div>`;
+    return;
+  }
+  try {
+    const { items } = await premRpc("lagkill_admin_announcements", {});
+    list.innerHTML = items.length
+      ? items
+          .map(
+            (a) => `<div class="glass-row">
+              <div class="user-info"><div class="user-meta"><b>${esc(a.title)}</b>
+                <span>${ANN_KIND[a.kind] || a.kind} · ${a.live ? "<span style='color: var(--success)'>widoczne</span>" : "wyłączone"} · od ${new Date(a.starts_at).toLocaleString("pl-PL")}${a.ends_at ? ` do ${new Date(a.ends_at).toLocaleString("pl-PL")}` : ""}</span></div></div>
+              ${a.live ? `<button class="btn-side" data-ann-off="${a.id}">Wyłącz</button>` : ""}
+            </div>`,
+          )
+          .join("")
+      : `<div class="glass-row empty-row">Brak ogłoszeń</div>`;
+  } catch (err) {
+    list.innerHTML = `<div class="glass-row empty-row">${esc(err.message)}</div>`;
+  }
+}
+
+$("ann-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const msg = $("ann-msg");
+  msg.className = "admin-msg";
+  msg.textContent = "";
+  if (demo) return (msg.textContent = "Tryb demonstracyjny — ogłoszenie nie zostało opublikowane.");
+  const title = $("ann-title").value.trim();
+  const link = $("ann-link").value.trim();
+  if (!title) return ((msg.className = "admin-msg err"), (msg.textContent = "Wpisz tytuł."));
+  if (link && !/^https:\/\//.test(link)) return ((msg.className = "admin-msg err"), (msg.textContent = "Link musi zaczynać się od https://"));
+  const ends = $("ann-ends").value;
+  try {
+    await premRpc("lagkill_admin_announce", {
+      title,
+      body: $("ann-body").value.trim() || null,
+      link_url: link || null,
+      link_label: $("ann-label").value.trim() || null,
+      kind: $("ann-kind").value,
+      ends_at: ends ? new Date(ends).toISOString() : null,
+    });
+    msg.textContent = "Opublikowano — użytkownicy zobaczą je w ciągu 30 minut.";
+    ["ann-title", "ann-body", "ann-link", "ann-label", "ann-ends"].forEach((id) => ($(id).value = ""));
+    loadAnnouncements();
+  } catch (err) {
+    msg.className = "admin-msg err";
+    msg.textContent = err.message;
+  }
+});
+
+$("ann-list").addEventListener("click", async (e) => {
+  const id = e.target.dataset?.annOff;
+  if (!id) return;
+  try {
+    await premRpc("lagkill_admin_announce_off", { id: Number(id) });
+    loadAnnouncements();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
 /* ───────── nawigacja ───────── */
 
 function showView(name) {
@@ -444,6 +617,10 @@ function showView(name) {
   $("view-title").textContent = {
     overview: "Przegląd", users: "Użytkownicy", referrals: "Polecenia", presets: "Zestawy", charts: "Analityka", tweaks: "Tweaki & Apps", admin: "Zarządzanie"
   }[name];
+  if (name === "admin") {
+    loadAnnouncements();
+    loadPremium();
+  }
   
   if (lastStats) {
     lineChart($("chart-active"), lastStats.daily.map((d) => ({ x: d.day, y: d.active })), "aktywnych");

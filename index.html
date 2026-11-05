@@ -419,6 +419,19 @@
 
           <!-- Widok: Zarządzanie (Admin) -->
           <section class="view" id="view-admin">
+            <div class="glass-panel" style="margin-bottom: 12px;">
+              <div class="panel-head">
+                <h2>Statystyki</h2>
+                <div class="stat-sub">Instalacje, uruchomienia, aktywni, wykresy, lista użytkowników</div>
+              </div>
+              <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 14px; line-height: 1.6;">
+                Zeruje liczniki w panelu — zaczynają liczyć od teraz. Stare dane nie są kasowane, tylko przenoszone do archiwum (da się je przywrócić w Supabase).
+                Kody polecające, polecenia, zestawy, Premium i ogłoszenia zostają bez zmian.
+              </p>
+              <button class="btn-primary" id="reset-stats" style="width: auto; padding: 0 18px; background: transparent; color: var(--danger); border: 1px solid var(--danger);">Wyzeruj statystyki</button>
+              <div class="admin-msg" id="reset-msg"></div>
+            </div>
+
             <div class="glass-panel">
               <div class="panel-head">
                 <h2>Własne kody polecające</h2>
@@ -447,6 +460,61 @@
                 <div class="code-preview" id="admin-code-display">---</div>
                 <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;" id="admin-code-owner">---</p>
               </div>
+            </div>
+
+            <div class="glass-panel" style="margin-top: 12px;">
+              <div class="panel-head">
+                <h2>Ogłoszenia w aplikacji</h2>
+                <div class="stat-sub">Baner na górze LagKill u wszystkich użytkowników</div>
+              </div>
+              <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px; line-height: 1.6;">
+                Pojawia się w ciągu 30 minut (od razu po ponownym uruchomieniu aplikacji). Użytkownik może je zamknąć krzyżykiem. Widać maksymalnie 3 naraz.
+              </p>
+              <form class="admin-form" id="ann-form" style="max-width: none;">
+                <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px;">
+                  <div class="form-group"><label>Tytuł</label><input type="text" id="ann-title" maxlength="120" placeholder="np. Giveaway 10 kodów Premium!" /></div>
+                  <div class="form-group"><label>Rodzaj</label>
+                    <select id="ann-kind" style="width: 100%; height: 40px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 0 10px;">
+                      <option value="promo">Promocja / giveaway (żółty)</option>
+                      <option value="info">Informacja</option>
+                      <option value="warn">Ważne (czerwony)</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label>Koniec (puste = do wyłączenia)</label><input type="datetime-local" id="ann-ends" /></div>
+                </div>
+                <div class="form-group"><label>Treść (opcjonalnie)</label><input type="text" id="ann-body" maxlength="400" placeholder="np. Wejdź na Discorda i weź udział do niedzieli" /></div>
+                <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; gap: 10px; align-items: end;">
+                  <div class="form-group" style="margin: 0;"><label>Link przycisku (https://, opcjonalnie)</label><input type="text" id="ann-link" placeholder="https://discord.gg/..." /></div>
+                  <div class="form-group" style="margin: 0;"><label>Napis na przycisku</label><input type="text" id="ann-label" maxlength="40" placeholder="np. Weź udział" /></div>
+                  <button type="submit" class="btn-primary" style="width: auto; padding: 0 18px;">Opublikuj</button>
+                </div>
+              </form>
+              <div class="admin-msg" id="ann-msg"></div>
+              <div class="row-list" id="ann-list" style="margin-top: 14px;"></div>
+            </div>
+
+            <div class="glass-panel" style="margin-top: 12px;">
+              <div class="panel-head">
+                <h2>Kody Premium</h2>
+                <div class="stat-sub" id="prem-trials">Okres próbny: –</div>
+              </div>
+              <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px; line-height: 1.6;">
+                Kod wpisuje się w aplikacji (Odblokuj → „Kod Premium”) po zalogowaniu przez Discord. Sprzedawaj je w sklepie albo rozdawaj w giveawayach.
+                Jedno konto i jedno urządzenie mogą użyć danego kodu tylko raz. Usunięcie kodu zabiera Premium z niego.
+              </p>
+              <form class="admin-form" id="prem-form" style="max-width: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 10px; align-items: end;">
+                <div class="form-group" style="margin: 0;"><label>Ile kodów</label><input type="number" id="prem-count" value="1" min="1" max="500" /></div>
+                <div class="form-group" style="margin: 0;"><label>Dni (puste = na zawsze)</label><input type="number" id="prem-days" value="30" min="1" max="3650" /></div>
+                <div class="form-group" style="margin: 0;"><label>Użyć na kod</label><input type="number" id="prem-uses" value="1" min="1" max="100000" /></div>
+                <div class="form-group" style="margin: 0;"><label>Notatka</label><input type="text" id="prem-note" placeholder="np. giveaway TikTok" maxlength="120" /></div>
+                <button type="submit" class="btn-primary" style="width: auto; padding: 0 18px;">Utwórz</button>
+              </form>
+              <div class="admin-msg" id="prem-msg"></div>
+              <div id="prem-new" class="hidden" style="margin-top: 12px;">
+                <div class="row-list"><textarea id="prem-new-list" readonly style="width: 100%; min-height: 90px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px; font-family: var(--mono); font-size: 13px;"></textarea></div>
+                <button class="btn-side" id="prem-copy" style="margin-top: 6px;">Kopiuj wszystkie</button>
+              </div>
+              <div class="row-list" id="prem-list" style="margin-top: 14px;"></div>
             </div>
           </section>
         </div>
